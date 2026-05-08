@@ -7,7 +7,8 @@ dist/
 .worktrees/
 skills-lock.json
 docs/superpower/
-AGENTS.md
+*/conventionalcommits.md
+*/AGENTS.md
 
 .env
 .env.*
