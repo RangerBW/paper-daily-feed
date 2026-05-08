@@ -1,0 +1,84 @@
+name: Repository maintenance
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 3 1 * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repository-maintenance
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPOSITORY: nehSgnaiL/paper-daily-feed
+  MAINTENANCE_BRANCH: paper-daily-feed-maintenance
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Keep scheduled workflows active
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch --no-tags origin "${MAINTENANCE_BRANCH}" || true
+
+          if git show-ref --verify --quiet "refs/remotes/origin/${MAINTENANCE_BRANCH}"; then
+            git switch -C "${MAINTENANCE_BRANCH}" "origin/${MAINTENANCE_BRANCH}"
+          else
+            git switch -c "${MAINTENANCE_BRANCH}"
+          fi
+
+          git commit --allow-empty -m "ci: keep scheduled workflows active"
+          git push origin "${MAINTENANCE_BRANCH}"
+
+  sync:
+    if: ${{ github.repository != 'nehSgnaiL/paper-daily-feed' }}
+    needs: keepalive
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward fork from upstream
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags origin main
+          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
+          git fetch --no-tags upstream main
+
+          if git merge-base --is-ancestor origin/main upstream/main; then
+            git push origin upstream/main:main
+            {
+              echo "### Auto-sync checked"
+              echo
+              echo "The fork main branch is aligned with \`${UPSTREAM_REPOSITORY}:main\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "### Auto-sync skipped"
+              echo
+              echo "This fork has local commits or other divergence on \`main\`."
+              echo "No automatic merge was attempted, so your files were left unchanged."
+              echo
+              echo "To update manually, open your fork on GitHub and click **Sync fork** -> **Update branch**."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "::warning title=Auto-sync skipped::Fork main has local divergence. No automatic merge was attempted."
+          fi
