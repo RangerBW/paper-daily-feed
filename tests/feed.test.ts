@@ -222,6 +222,25 @@ describe("normalizeFeedItem", () => {
       expectedDate: new Date("2026-04-26T12:00:00.000Z")
     },
     {
+      label: "Royal Society Publishing",
+      xml: `<?xml version="1.0"?>
+        <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:prism="http://prismstandard.org/namespaces/basic/2.0/">
+          <channel>
+            <title>Journal of The Royal Society Interface</title>
+            <item>
+              <title>Royal Society paper</title>
+              <link>https://example.test/royal-society-paper</link>
+              <description>Royal Society abstract.</description>
+              <dc:creator>Mary Cartwright</dc:creator>
+              <dc:creator>Alan Hodgkin</dc:creator>
+              <prism:publicationDate>2026-04-25</prism:publicationDate>
+            </item>
+          </channel>
+        </rss>`,
+      expectedAuthors: ["Mary Cartwright", "Alan Hodgkin"],
+      expectedDate: new Date("2026-04-25T00:00:00.000Z")
+    },
+    {
       label: "ScienceDirect",
       xml: `<?xml version="1.0"?>
         <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:prism="http://prismstandard.org/namespaces/basic/2.0/">

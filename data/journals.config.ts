@@ -95,9 +95,38 @@ const journals: Journal[] = [
     rss: "https://rss.sciencedirect.com/publication/science/01692046"
   },
   {
+    name: "Journal of The Royal Society Interface",
+    rss: "https://royalsocietypublishing.org/rss/site_1000019/LatestOpenIssueArticles_1000012.xml"
+  },
+  {
+    name: "Habitat International",
+    rss: "https://rss.sciencedirect.com/publication/science/01973975"
+  },
+  {
+    name: "Urban Geography",
+    rss: "https://www.tandfonline.com/feed/rss/rurb20"
+  },
+  {
+    name: "Economic Geography",
+    rss: "https://www.tandfonline.com/feed/rss/recg20"
+  },
+  {
+    name: "npj Urban Sustainability",
+    rss: "https://www.nature.com/npjurbansustain.rss"
+  },
+  {
+    name: "Transportation Research Part C: Emerging Technologies",
+    rss: "https://rss.sciencedirect.com/publication/science/0968090X",
+  },
+  {
     name: "IEEE Transactions on Intelligent Transportation Systems",
     abbr: "IEEE T-ITS",
     rss: "https://ieeexplore.ieee.org/rss/TOC6979.XML"
+  },
+  {
+    name: "International Journal of Digital Earth",
+    abbr: "IJDE",
+    rss: "https://www.tandfonline.com/feed/rss/tjde20"
   }
 ];
 

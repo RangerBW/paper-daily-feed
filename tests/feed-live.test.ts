@@ -16,6 +16,7 @@ const targets: PublisherSmokeTarget[] = [
   { family: "PNAS", selection: "PNAS" },
   { family: "Taylor & Francis", selection: "AAAG" },
   { family: "ScienceDirect/Elsevier", selection: "CEUS" },
+  { family: "Royal Society Publishing", selection: "Journal of The Royal Society Interface" },
   { family: "IEEE Xplore", selection: "IEEE T-ITS" }
 ];
 

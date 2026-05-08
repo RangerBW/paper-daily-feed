@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import catalog from "../data/journals.config.js";
 import { filterSubscribedJournals } from "../src/journals.js";
 import type { Journal } from "../src/types.js";
 
@@ -30,5 +31,47 @@ describe("filterSubscribedJournals", () => {
     expect(() => filterSubscribedJournals(journals, ["Unknown Journal"])).toThrow(
       "Unknown journal subscription: Unknown Journal"
     );
+  });
+});
+
+describe("bundled journal catalog", () => {
+  const addedCatalogEntries = [
+    "Journal of The Royal Society Interface",
+    "Habitat International",
+    "Urban Geography",
+    "Economic Geography",
+    "npj Urban Sustainability",
+    "Transportation Research Part C: Emerging Technologies",
+    "International Journal of Digital Earth"
+  ];
+
+  it("keeps every bundled journal selectable and backed by an RSS URL", () => {
+    for (const journal of catalog) {
+      expect(journal.name.trim()).toBe(journal.name);
+      expect(journal.name.length).toBeGreaterThan(0);
+      expect(journal.rss).toMatch(/^https:\/\//);
+    }
+  });
+
+  it("has unique names and abbreviations for subscription matching", () => {
+    const aliasesByJournal = catalog.flatMap((journal) =>
+      [journal.name, journal.abbr]
+        .filter((value): value is string => Boolean(value))
+        .map((value) => ({
+          alias: value.trim().toLowerCase(),
+          journal: journal.name
+        }))
+    );
+    const aliasesByName = new Map<string, Set<string>>();
+
+    for (const { alias, journal } of aliasesByJournal) {
+      aliasesByName.set(alias, (aliasesByName.get(alias) ?? new Set()).add(journal));
+    }
+
+    expect([...aliasesByName.values()].every((journals) => journals.size === 1)).toBe(true);
+  });
+
+  it("includes the newly supported catalog entries", () => {
+    expect(catalog.map((journal) => journal.name)).toEqual(expect.arrayContaining(addedCatalogEntries));
   });
 });

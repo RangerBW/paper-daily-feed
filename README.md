@@ -65,7 +65,7 @@ Go to your repository's [Actions Secrets page](../../settings/secrets/actions) (
 | `ZOTERO_KEY` | `zotero-api-key` | Corresponding Zotero API key. <br> Get `ZOTERO_KEY` by creating a new key with appropriate permissions (at least "Read" access) in [Zotero Settings](https://www.zotero.org/settings/security#applications). See [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-2-create-a-key). | :closed_book:`Recommended` |
 | `OPENAI_BASE_URL` | `https://api.siliconflow.cn/v1` | OpenAI-compatible LLM API used for summarizing paper. <br>If not set, paper abstracts will be used as summaries. <br>You can get FREE API in [SiliconFlow](https://cloud.siliconflow.cn/i/p9BtMTtU) for using open source LLMs (e.g., `Qwen/Qwen3-8B`). | :robot:`Recommended` |
 | `OPENAI_API_KEY` | `sk-...` | Set corresponding API key if you use API for TLDR summaries. | :robot:`Recommended` |
-| `EMBEDDING_BASE_URL` | `https://api.openai.com/v1` | API for text matching. Generally leave it empty, since the performance of local embedding model is acceptable. | :computer:`Optional` |
+| `EMBEDDING_BASE_URL` | `https://api.openai.com/v1` | API for text matching. **Generally leave it empty**, since the performance of local embedding model is acceptable. | :computer:`Optional` |
 | `EMBEDDING_API_KEY` | `sk-...` | Set corresponding key if you use Embeddings API for text matching. | :computer:`Optional` |
 
 ### 3. Create Variable
