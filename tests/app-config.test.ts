@@ -269,7 +269,8 @@ describe("loadAppConfig", () => {
           batchSize: 16
         },
         paperLimit: 10,
-        maxPaperAgeDays: 7
+        maxPaperAgeDays: 90,
+        minScore: 0.35
       },
       summary: {
         enabled: false,
@@ -440,5 +441,11 @@ describe("loadAppConfig", () => {
         })
       )
     ).toThrow("Missing environment variable for app config secret reference: MISSING_SUMMARY_KEY.");
+  });
+
+  it("rejects minScore values outside the cosine similarity range", () => {
+    expect(() => loadAppConfig({}, json({ matching: { minScore: 1.1 } }))).toThrow(
+      "Expected matching.minScore to be between 0 and 1, got 1.1."
+    );
   });
 });

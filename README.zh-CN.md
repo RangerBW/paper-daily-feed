@@ -112,8 +112,10 @@
         "language": "简体中文",
       },
       "matching": {
-        // 推荐论文数量
+        // 最多推荐的论文数量
         "paperLimit": 10,
+        // 论文被推送所需的最低相关性分数
+        "minScore": 0.35
       },
       "feeds": {
         // 从 data/journals.config.ts 中选择具体期刊；留空表示包含全部

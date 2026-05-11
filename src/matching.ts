@@ -99,5 +99,6 @@ export async function rankPapers(
       };
     })
     .sort((left, right) => right.score - left.score)
+    .filter((paper) => paper.score >= config.minScore)
     .slice(0, config.paperLimit);
 }

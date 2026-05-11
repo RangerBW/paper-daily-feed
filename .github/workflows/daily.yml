@@ -6,7 +6,7 @@ on:
     - cron: "11 22 * * *"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: daily-paper-feeds
@@ -55,6 +55,17 @@ jobs:
       - name: Typecheck
         run: npm run build
 
+      - name: Load delivery history
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags origin paper-daily-feed-state || true
+          if git show-ref --verify --quiet refs/remotes/origin/paper-daily-feed-state; then
+            if git show origin/paper-daily-feed-state:.delivery-history.json > /tmp/paper-daily-feed-delivery-history.json; then
+              cp /tmp/paper-daily-feed-delivery-history.json .delivery-history.json
+            fi
+          fi
+
       - name: Run recommendation feed
         env:
           APP_CONFIG: ${{ vars.APP_CONFIG }}
@@ -64,9 +75,37 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           EMBEDDING_BASE_URL: ${{ vars.EMBEDDING_BASE_URL || secrets.EMBEDDING_BASE_URL }}
           EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
+          DELIVERY_HISTORY_SALT: ${{ secrets.DELIVERY_HISTORY_SALT }}
           SENDER: ${{ secrets.SENDER }}
           SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
           RECEIVER: ${{ secrets.RECEIVER }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
         run: npm start -- run
+
+      - name: Save delivery history
+        run: |
+          set -euo pipefail
+
+          if [ ! -f .delivery-history.json ]; then
+            echo "No delivery history file was produced."
+            exit 0
+          fi
+
+          cp .delivery-history.json /tmp/paper-daily-feed-delivery-history.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git show-ref --verify --quiet refs/remotes/origin/paper-daily-feed-state; then
+            git switch -C paper-daily-feed-state origin/paper-daily-feed-state
+          else
+            git switch --orphan paper-daily-feed-state
+            git rm -rf . || true
+          fi
+
+          cp /tmp/paper-daily-feed-delivery-history.json .delivery-history.json
+          git add -f .delivery-history.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: update delivery history"
+          git push origin paper-daily-feed-state

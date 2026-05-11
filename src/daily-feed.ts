@@ -2,6 +2,13 @@ import journals from "../data/journals.config.js";
 import type { AppConfig } from "./app-config.js";
 import { loadAppConfig } from "./app-config.js";
 import { configSummaryLines } from "./config-summary.js";
+import {
+  filterUndeliveredPapers,
+  loadDeliveryHistory,
+  recordDeliveredPapers,
+  saveDeliveryHistory,
+  DELIVERY_HISTORY_PATH
+} from "./delivery-history.js";
 import { sendEmail } from "./email.js";
 import { buildInterestCorpus } from "./interest-corpus.js";
 import { rankPapers } from "./matching.js";
@@ -56,8 +63,13 @@ export async function runDailyFeed(
   console.log(`Built ${interestCorpus.length} interest documents.`);
 
   const recentPapers = await fetchRecentFeedPapers(journals, config.feeds, config.matching.maxPaperAgeDays);
-  console.log(`Ranking ${recentPapers.length} papers against ${interestCorpus.length} interest documents with ${matchingProvider(config)}...`);
-  let recommendations = await rankPapers(config.matching, recentPapers, interestCorpus, env);
+  const deliveryHistory = loadDeliveryHistory();
+  const eligiblePapers = filterUndeliveredPapers(recentPapers, deliveryHistory, env);
+  console.log(
+    `Filtered ${recentPapers.length - eligiblePapers.length} already delivered papers; ${eligiblePapers.length} candidates remain.`
+  );
+  console.log(`Ranking ${eligiblePapers.length} papers against ${interestCorpus.length} interest documents with ${matchingProvider(config)}...`);
+  let recommendations = await rankPapers(config.matching, eligiblePapers, interestCorpus, env);
   console.log(`Ranked ${recommendations.length} recommended papers.`);
 
   if (recommendations.length === 0 && !config.runtime.sendEmpty && mode === "run") {
@@ -79,8 +91,10 @@ export async function runDailyFeed(
   const date = new Date().toISOString().slice(0, 10);
   console.log(`Sending ${recommendations.length} recommendations via SMTP...`);
   const delivery = await sendEmail(config.delivery, html, `Daily paper feeds ${date}`);
+  if (recommendations.length > 0) {
+    saveDeliveryHistory(DELIVERY_HISTORY_PATH, recordDeliveredPapers(deliveryHistory, recommendations, new Date(), env));
+  }
   const deliveryDetails = describeDelivery(delivery);
   console.log(`Sent ${recommendations.length} recommendations${deliveryDetails}.`);
   return { recommendationCount: recommendations.length, html, sent: true, deliveryDetails };
 }
-

@@ -112,8 +112,10 @@ Next, we need to add your settings. Because this isn't sensitive data (like a pa
         "language": "English",
       },
       "matching": {
-        // number of papers to recommend
-        "paperLimit": 10, 
+        // Maximum number of papers to recommend
+        "paperLimit": 10,
+        // Minimum relevance score for a paper to be sent
+        "minScore": 0.35
       },
       "feeds": {
         // Select specific journals from data/journals.config.ts, or leave Empty to include all.

@@ -31,7 +31,8 @@ const matchingConfig: MatchingConfig = {
     batchSize: 2
   },
   paperLimit: 10,
-  maxPaperAgeDays: 7
+  maxPaperAgeDays: 7,
+  minScore: 0.35
 };
 
 const candidate = (title: string, abstract: string, url = `https://example.test/${title}`) => ({
@@ -141,7 +142,7 @@ describe("rankPapers", () => {
 
   it("keeps match context when the best score is zero", async () => {
     const ranked = await rankPapers(
-      matchingConfig,
+      { ...matchingConfig, minScore: 0 },
       [candidate("Unknown topic", "No vector overlap.")],
       [interest("Fallback interest", "Reference text.", ["fallback"])],
       {},
@@ -158,6 +159,22 @@ describe("rankPapers", () => {
         bestMatchTopics: ["fallback"]
       }
     });
+  });
+
+  it("filters recommendations below the minimum score before applying the paper limit", async () => {
+    const ranked = await rankPapers(
+      { ...matchingConfig, paperLimit: 1, minScore: 0.5 },
+      [
+        candidate("Strong match", "Transit equity."),
+        candidate("Weak match", "Barely related."),
+        candidate("Second strong match", "Mobility access.")
+      ],
+      [interest("Transport", "Transport equity and mobility access.", ["transport"])],
+      {},
+      async () => [[1, 0], [0.4, 0.6], [0.8, 0.2], [1, 0]]
+    );
+
+    expect(ranked.map((paper) => paper.title)).toEqual(["Strong match"]);
   });
 });
 

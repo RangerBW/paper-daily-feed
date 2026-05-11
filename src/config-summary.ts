@@ -24,7 +24,7 @@ export function configSummaryLines(config: AppConfig): string[] {
     "Config summary:",
     `- interests: ${enabledInterestSources(config)}`,
     `- feeds: catalog=${config.feeds.catalogSelections.length || "all"}, customRss=${config.feeds.customRss.length}`,
-    `- matching: provider=${config.matching.provider}, active=${matching.active}, model=${matching.model}, paperLimit=${config.matching.paperLimit}, maxPaperAgeDays=${config.matching.maxPaperAgeDays}`,
+    `- matching: provider=${config.matching.provider}, active=${matching.active}, model=${matching.model}, paperLimit=${config.matching.paperLimit}, minScore=${config.matching.minScore}, maxPaperAgeDays=${config.matching.maxPaperAgeDays}`,
     `- summary: enabled=${config.summary.enabled}, model=${config.summary.model}, language=${config.summary.language}`,
     `- delivery: mode=${config.delivery.mode}, from=${config.delivery.from || "(empty)"}, to=${config.delivery.to || "(empty)"}, smtpHost=${config.delivery.smtpHost || "(empty)"}, smtpPort=${config.delivery.smtpPort}`,
     `- runtime: debug=${config.runtime.debug}, sendEmpty=${config.runtime.sendEmpty}`

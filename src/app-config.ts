@@ -62,6 +62,7 @@ export type MatchingConfig = {
   };
   paperLimit: number;
   maxPaperAgeDays: number;
+  minScore: number;
 };
 
 export type SummaryConfig = {
@@ -232,6 +233,14 @@ function asNumber(value: unknown, defaultValue: number): number {
   return parsed;
 }
 
+function asNumberInRange(value: unknown, defaultValue: number, label: string, min: number, max: number): number {
+  const parsed = asNumber(value, defaultValue);
+  if (parsed < min || parsed > max) {
+    throw new Error(`Expected ${label} to be between ${min} and ${max}, got ${parsed}.`);
+  }
+  return parsed;
+}
+
 function asStringArray(value: unknown, defaultValue: string[]): string[] {
   if (value === null || value === undefined || value === "") {
     return defaultValue;
@@ -392,7 +401,8 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
         batchSize: asNumber(matchingLocal.batchSize, 16)
       },
       paperLimit: asNumber(configOrEnv(matching.paperLimit, env, "PAPER_LIMIT"), 10),
-      maxPaperAgeDays: asNumber(matching.maxPaperAgeDays, 7)
+      maxPaperAgeDays: asNumber(matching.maxPaperAgeDays, 90),
+      minScore: asNumberInRange(matching.minScore, 0.35, "matching.minScore", 0, 1)
     },
     summary: {
       enabled: asBoolean(summary.enabled, false),
