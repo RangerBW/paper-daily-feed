@@ -3,7 +3,7 @@ name: Repository maintenance
 on:
   workflow_dispatch:
   schedule:
-    - cron: "37 3 1 * *"
+    - cron: "37 21 * * 0"
 
 permissions:
   contents: write
@@ -55,30 +55,59 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fast-forward fork from upstream
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Sync fork from upstream
         run: |
           set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git fetch --no-tags origin main
           git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
           git fetch --no-tags upstream main
+          git switch -C main origin/main
 
-          if git merge-base --is-ancestor origin/main upstream/main; then
-            git push origin upstream/main:main
+          if git merge-base --is-ancestor upstream/main HEAD; then
             {
               echo "### Auto-sync checked"
               echo
-              echo "The fork main branch is aligned with \`${UPSTREAM_REPOSITORY}:main\`."
+              echo "The fork main branch already contains \`${UPSTREAM_REPOSITORY}:main\`."
             } >> "$GITHUB_STEP_SUMMARY"
-          else
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor origin/main upstream/main; then
+            git merge --ff-only upstream/main
+          elif ! git merge --no-ff upstream/main -m "chore: sync upstream main"; then
+            git merge --abort || true
             {
               echo "### Auto-sync skipped"
               echo
-              echo "This fork has local commits or other divergence on \`main\`."
-              echo "No automatic merge was attempted, so your files were left unchanged."
+              echo "The fork main branch and \`${UPSTREAM_REPOSITORY}:main\` both changed, and Git could not merge them automatically."
+              echo "No updates were pushed to \`main\`."
               echo
-              echo "To update manually, open your fork on GitHub and click **Sync fork** -> **Update branch**."
+              echo "Resolve the conflicts manually, then rerun this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
 
-            echo "::warning title=Auto-sync skipped::Fork main has local divergence. No automatic merge was attempted."
+            echo "::warning title=Auto-sync skipped::Upstream changes could not be merged automatically."
+            exit 0
           fi
+
+          npm ci
+          npm run build
+          npm run test:email
+          npm test
+
+          git push origin main
+
+          {
+            echo "### Auto-sync completed"
+            echo
+            echo "The fork main branch was updated from \`${UPSTREAM_REPOSITORY}:main\` after verification passed."
+          } >> "$GITHUB_STEP_SUMMARY"
