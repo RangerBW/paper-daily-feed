@@ -127,6 +127,11 @@ const journals: Journal[] = [
     name: "International Journal of Digital Earth",
     abbr: "IJDE",
     rss: "https://www.tandfonline.com/feed/rss/tjde20"
+  },
+  {
+    name: "Sustainable Cities and Society",
+    abbr: "SCS",
+    rss: "https://rss.sciencedirect.com/publication/science/22106707"
   }
 ];
 
