@@ -151,7 +151,11 @@ describe("runDailyFeed delivery history", () => {
       {}
     );
     expect(matchingMock.rankPapers).toHaveBeenCalledWith(config().matching, [paper("Fresh")], [interest], {});
-    expect(emailMock.sendEmail).toHaveBeenCalledOnce();
+    expect(emailMock.sendEmail).toHaveBeenCalledWith(
+      config().delivery,
+      expect.any(String),
+      expect.stringMatching(/^Paper feed for \d{1,2}(?:st|nd|rd|th) [A-Z][a-z]+ \d{4}$/)
+    );
     expect(historyMock.recordDeliveredPapers).toHaveBeenCalledWith(
       { version: 1, delivered: [] },
       [recommended("Fresh")],

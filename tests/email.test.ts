@@ -45,6 +45,8 @@ describe("renderEmail", () => {
     expect(html).toContain("Public transit accessibility and climate resilience in neighborhoods.");
     expect(html).toContain("https://example.test/transit");
     expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed");
+    expect(html).toContain(">Unsubscribe</a>");
+    expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed#customization");
     expect(html).toContain('lang="en"');
     expect(html).toContain("Daily paper recommendations selected for your research interests.");
     expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');
@@ -119,7 +121,7 @@ describe("sendEmail", () => {
     );
     expect(sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: "sender@example.test",
+        from: "\"Daily Paper Feeds\" <sender@example.test>",
         to: "receiver@example.test",
         subject: "Subject",
         html: "<p>Hello</p>"

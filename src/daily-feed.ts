@@ -45,6 +45,30 @@ function matchingProvider(config: AppConfig): string {
   return config.matching.provider === "api" && config.matching.api.apiKey.trim() ? "API embeddings" : "local embeddings";
 }
 
+function ordinalDay(day: number): string {
+  if (day >= 11 && day <= 13) {
+    return `${day}th`;
+  }
+
+  switch (day % 10) {
+    case 1:
+      return `${day}st`;
+    case 2:
+      return `${day}nd`;
+    case 3:
+      return `${day}rd`;
+    default:
+      return `${day}th`;
+  }
+}
+
+function emailSubject(date = new Date()): string {
+  return `Paper feed for ${ordinalDay(date.getUTCDate())} ${date.toLocaleString("en-US", {
+    month: "long",
+    timeZone: "UTC"
+  })} ${date.getUTCFullYear()}`;
+}
+
 export async function runDailyFeed(
   mode: DailyFeedMode,
   env: Env = process.env,
@@ -88,9 +112,8 @@ export async function runDailyFeed(
     return { recommendationCount: recommendations.length, html, sent: false, deliveryDetails: "" };
   }
 
-  const date = new Date().toISOString().slice(0, 10);
   console.log(`Sending ${recommendations.length} recommendations via SMTP...`);
-  const delivery = await sendEmail(config.delivery, html, `Daily paper feeds ${date}`);
+  const delivery = await sendEmail(config.delivery, html, emailSubject());
   if (recommendations.length > 0) {
     saveDeliveryHistory(DELIVERY_HISTORY_PATH, recordDeliveredPapers(deliveryHistory, recommendations, new Date(), env));
   }

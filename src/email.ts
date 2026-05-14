@@ -4,6 +4,7 @@ import type { RecommendedPaper } from "./types.js";
 
 const ABSTRACT_EXCERPT_LIMIT = 280;
 const EMAIL_PREHEADER = "Daily paper recommendations selected for your research interests.";
+const EMAIL_SENDER_NAME = "Daily Paper Feeds";
 const EMAIL_WIDTH = 600;
 
 type RenderablePaper = Omit<RecommendedPaper, "matchContext"> & {
@@ -146,6 +147,7 @@ export function renderEmail(papers: RenderablePaper[]): string {
             <tr>
               <td align="center" style="padding: 18px 2px 4px 2px; text-align: center; color: #6e6e73; font-size: 13px; line-height: 1.6;">
                 <p style="margin: 0;">Built with <a href="https://github.com/nehSgnaiL/paper-daily-feed" style="color: #007aff; font-weight: 700; text-decoration: none;">paper-daily-feed</a> by <a href="https://nehsgnail.github.io/" style="color: #007aff; font-weight: 700; text-decoration: none;">nehSgnaiL</a>.</p>
+                <p style="margin: 8px 0 0 0;"><a href="https://github.com/nehSgnaiL/paper-daily-feed#customization" style="color: inherit; font-size: 11px; text-decoration: underline;">Unsubscribe</a></p>
               </td>
             </tr>
           </table>
@@ -171,6 +173,14 @@ function requiredPort(value: number, label: string): number {
   return value;
 }
 
+function emailAddress(value: string): string {
+  return value.match(/<([^>]+)>/)?.[1]?.trim() ?? value;
+}
+
+function formatSender(value: string): string {
+  return `"${EMAIL_SENDER_NAME}" <${emailAddress(value)}>`;
+}
+
 export async function sendEmail(
   delivery: DeliveryConfig,
   html: string,
@@ -190,13 +200,13 @@ export async function sendEmail(
     greetingTimeout: 15000,
     socketTimeout: 30000,
     auth: {
-      user: sender,
+      user: emailAddress(sender),
       pass: senderPassword
     }
   });
 
   return transporter.sendMail({
-    from: sender,
+    from: formatSender(sender),
     to: receiver,
     subject,
     html

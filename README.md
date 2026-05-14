@@ -158,13 +158,13 @@ Any issues, questions, or experience could be shared via [raising issue](https:/
 
 > [!TIP]
 > - **More customization:** Check out the full template in [`config/app.example.jsonc`](./config/app.example.jsonc) to see all the extra parameters you can add.
-> - **Protect your data:** Always keep passwords and API keys in **Secrets** (from [Step 2](#2-create-secrets)), never directly in your `APP_CONFIG`.
+> - **Stop or pause emails:** To stop receiving emails, simply disable the [**Daily paper feeds**](../../actions/workflows/daily.yml) workflow in the Actions tab. You can re-enable it anytime to start again.
 > - **Changing the daily email time:** By default, emails are sent at 06:11 UTC+8 (22:11 UTC). To change this, edit the `cron: '11 22 * * *'` line in [`.github/workflows/daily.yml`](./.github/workflows/daily.yml) using the ✏️ [**pencil icon**](../../edit/main/.github/workflows/daily.yml). (Use [crontab.guru](https://crontab.guru/) to easily generate the correct `cron` time format!)
 
+
 > [!NOTE]
-> **Keeping your fork active and updated:**
-> * **Staying active:** A monthly [maintenance workflow](../../actions/workflows/maintenance.yml) runs automatically to keep GitHub from pausing your daily emails.
-> * **Auto-updates:** Every month, the forked repository will try to update for latest features and bug fixes. If you have changed any files, it will safely skip the auto-update!
+> * **Protect your data:** Always keep passwords and API keys in **Secrets** (from [Step 2](#2-create-secrets)), never directly in your `APP_CONFIG`.
+> * **Staying active & updated:** The [maintenance workflow](../../actions/workflows/maintenance.yml) will run weekly to keep your daily emails active and to fetch the latest features and bug fixes.
 
 <h2>Local Run</h2>
 

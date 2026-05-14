@@ -158,13 +158,12 @@ GitHub 会默认暂停 fork 仓库中的自动任务。我们来启用它们：
 
 > [!TIP]
 > - **更多自定义：** 查看完整模板 [`config/app.example.jsonc`](./config/app.example.jsonc)，了解可以添加的额外参数。
-> - **保护你的数据：** 始终把密码和 API key 放在 [第 2 步](#2-创建-secrets) 的 **Secrets** 中，不要直接写进 `APP_CONFIG`。
+> - **停止或暂停邮件：** 如需停止接收邮件，只要在 Actions 页面禁用 [**Daily paper feeds**](../../actions/workflows/daily.yml) 工作流即可。之后也可以随时重新启用。
 > - **修改每日邮件发送时间：** 默认邮件发送时间是 UTC+8 的 06:11，也就是 UTC 的 22:11。如需修改，点击 [`.github/workflows/daily.yml`](./.github/workflows/daily.yml) 右上角的 ✏️ [**pencil icon**](../../edit/main/.github/workflows/daily.yml)，编辑 `cron: '11 22 * * *'` 这一行。（可以用 [crontab.guru](https://crontab.guru/) 生成正确的 `cron` 时间格式。）
 
 > [!NOTE]
-> **保持 fork 仓库活跃并自动更新：**
-> * **保持活跃：** 每月自动运行的 [maintenance workflow](../../actions/workflows/maintenance.yml) 会帮助避免 GitHub 暂停你的每日邮件。
-> * **自动更新：** 每月，fork 仓库会尝试更新到最新功能和 bug 修复。如果你修改过任何文件，它会安全地跳过自动更新。
+> * **保护你的数据：** 始终把密码和 API key 放在 [第 2 步](#2-创建-secrets) 的 **Secrets** 中，不要直接写进 `APP_CONFIG`。
+> * **保持活跃并自动更新：** [maintenance workflow](../../actions/workflows/maintenance.yml) 会每周运行，保持每日邮件可用，并拉取最新功能和 bug 修复。
 
 <h2>本地运行</h2>
 

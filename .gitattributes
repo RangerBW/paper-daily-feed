@@ -1,0 +1,42 @@
+# Normalize line endings for all text files checked into the repository.
+* text=auto eol=lf
+
+# Source code and configuration.
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.js      text eol=lf
+*.jsx     text eol=lf
+*.mjs     text eol=lf
+*.cjs     text eol=lf
+*.json    text eol=lf
+*.jsonc   text eol=lf
+*.md      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.html    text eol=lf
+*.css     text eol=lf
+*.svg     text eol=lf
+.env*     text eol=lf
+.gitignore text eol=lf
+
+# Shell scripts should stay Unix-style; Windows command scripts need CRLF.
+*.sh      text eol=lf
+*.bash    text eol=lf
+*.ps1     text eol=lf
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+
+# npm lockfiles are generated text; keep diffs readable and line endings stable.
+package-lock.json text eol=lf
+
+# Binary assets must not be line-ending normalized or diffed as text.
+*.png     binary -eol
+*.jpg     binary -eol
+*.jpeg    binary -eol
+*.gif     binary -eol
+*.webp    binary -eol
+*.ico     binary -eol
+*.pdf     binary -eol
+*.zip     binary -eol
+*.gz      binary -eol
+*.tgz     binary -eol
