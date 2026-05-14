@@ -39,6 +39,62 @@ describe("normalizeFeedItem", () => {
     });
   });
 
+  it("removes Taylor & Francis affiliation and biography text from author metadata", () => {
+    const paper = normalizeFeedItem("IJGIS", {
+      title: "Taylor author metadata includes affiliations",
+      link: "https://example.test/ijgis-paper",
+      author:
+        "Wei Tu Zhuoyuan Bao Xiaojuan Liu Yatao Zhang Wei Gao Mingxiao Li a Department of Urban Informatics, School of Architecture and Urban Planning, Shenzhen University, Shenzhen, Guangdong Province, P.R. China b School of Architecture and Urban Planning, Guangdong Key Laboratory for Urban Informatics, Shenzhen University, Shenzhen, P.R. China Wei Tu is currently a Professor in the Department of Urban Spatial Information Engineering, Shenzhen University."
+    });
+
+    expect(paper?.authors).toEqual([
+      "Wei Tu",
+      "Zhuoyuan Bao",
+      "Xiaojuan Liu",
+      "Yatao Zhang",
+      "Wei Gao",
+      "Mingxiao Li"
+    ]);
+  });
+
+  it("removes PNAS ROR affiliations from concatenated author metadata", () => {
+    const paper = normalizeFeedItem("PNAS", {
+      title: "PNAS creator metadata includes ROR affiliations",
+      link: "https://example.test/pnas-paper",
+      dcCreators: [
+        "Megan KangKathryn EdinJens LudwigTimothy NelsonSendhil Mullainathanahttps://ror.org/00za53h95School of Government and Policy, Johns Hopkins University, Washington, DC 20001"
+      ]
+    });
+
+    expect(paper?.authors).toEqual([
+      "Megan Kang",
+      "Kathryn Edin",
+      "Jens Ludwig",
+      "Timothy Nelson",
+      "Sendhil Mullainathan"
+    ]);
+  });
+
+  it("removes unmarked affiliation text from Taylor & Francis author metadata", () => {
+    const paper = normalizeFeedItem("AAAG", {
+      title: "Taylor creator metadata has affiliation without superscript marker",
+      link: "https://example.test/aaag-paper",
+      dcCreators: ["Harriet Hawkins Department of Geography, Royal Holloway University of London"]
+    });
+
+    expect(paper?.authors).toEqual(["Harriet Hawkins"]);
+  });
+
+  it("drops Taylor & Francis bibliographic metadata descriptions", () => {
+    const paper = normalizeFeedItem("Urban Geography", {
+      title: "Taylor description only contains issue metadata",
+      link: "https://example.test/taylor-paper",
+      contentSnippet: "Volume 47, Issue 2, March 2026, Page 397-419\n."
+    });
+
+    expect(paper?.abstract).toBe("");
+  });
+
   it("parses ScienceDirect description fallback metadata", () => {
     const paper = normalizeFeedItem("CEUS", {
       title: "Urban housing markets under flood risk",

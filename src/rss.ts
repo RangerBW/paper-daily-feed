@@ -77,6 +77,10 @@ function removeLabeledFeedMetadata(text: string): string {
   );
 }
 
+function isBibliographicMetadataOnly(text: string): boolean {
+  return /^Volume\s+\d+[^.]*?(?:Issue\s+\d+[^.]*?)?(?:Page\s+[\w-]+[^.]*?)?\s*\.?$/i.test(text);
+}
+
 function normalizeAbstract(item: ParserItem): string {
   const text = itemText(item);
   if (!text) {
@@ -90,7 +94,8 @@ function normalizeAbstract(item: ParserItem): string {
     return removeLabeledFeedMetadata(labeledAbstract);
   }
 
-  return removeLabeledFeedMetadata(text);
+  const abstract = removeLabeledFeedMetadata(text);
+  return isBibliographicMetadataOnly(abstract) ? "" : abstract;
 }
 
 function isScienceDirectItem(item: ParserItem): boolean {
@@ -115,6 +120,70 @@ function parseScienceDirectAuthors(item: ParserItem): string[] {
     .filter((value, index, values) => value.length > 0 && values.indexOf(value) === index);
 }
 
+function stripAuthorMetadataTail(value: string): { text: string; hadMetadataTail: boolean } {
+  const affiliationStart = value.search(
+    /\s+(?:[a-z]\s+)?(?:Department|School|College|Faculty|Institute|Ministry|State Key Laboratory|Key Laboratory|Laboratory|Centre|Center|University|Unit|Dipartimento|WorldPop)\b/
+  );
+  const rorAffiliationStart = value.search(/[a-z]https?:\/\/ror\.org\//i);
+  const compactAffiliationStart = value.search(
+    /(?<=[a-z])a(?:[A-Z]{2,}|Department|School|College|Faculty|Institute|Ministry|State|Key|Laboratory|Unit|JILA|WorldPop)\b/
+  );
+  const biographyStart = value.search(
+    /\s+[A-Z][A-Za-z'-]+(?:\s+[A-Z][A-Za-z'-]+){1,3}\s+is\s+(?:currently\s+)?(?:a|an|the)\s+/i
+  );
+  const starts = [affiliationStart, rorAffiliationStart, compactAffiliationStart, biographyStart].filter(
+    (index) => index >= 0
+  );
+  const tailStart = starts.length > 0 ? Math.min(...starts) : -1;
+
+  if (tailStart < 0) {
+    return { text: value, hadMetadataTail: false };
+  }
+
+  return { text: value.slice(0, tailStart), hadMetadataTail: true };
+}
+
+function parseBiographyAuthorNames(value: string): string[] {
+  return Array.from(
+    value.matchAll(
+      /([\p{Lu}][\p{L}.'’-]+(?:\s+[\p{Lu}][\p{L}.'’-]+){1,3})\s+is\s+(?:currently\s+)?(?:a|an|the|Associate|Chief|Director|Full|Senior|Principal|Research|Postdoctoral|Master)/gu
+    ),
+    (match) =>
+      (match[1] ?? "")
+        .replace(/^(?:United Kingdom|USA|UK|Italy|Netherlands|China|Maryland)\.?\s*/i, "")
+        .trim()
+  ).filter(
+    (value, index, values) =>
+      value.length > 0 && !/^(?:He|She|They|His|Her|Their)$/i.test(value) && values.indexOf(value) === index
+  );
+}
+
+function splitAuthorValue(value: string): string[] {
+  const normalized = normalizeField(value).replace(/^by\s+/i, "");
+  const biographyNames = parseBiographyAuthorNames(normalized);
+  if (biographyNames.length > 1) {
+    return biographyNames;
+  }
+
+  const { text, hadMetadataTail } = stripAuthorMetadataTail(normalized);
+  const spacedNames = text.replace(/([a-z])([A-Z][a-z])/g, "$1 $2");
+  const delimited = spacedNames.split(/\s*(?:;|\||,|\band\b)\s*/i);
+  if (delimited.length > 1) {
+    return delimited;
+  }
+
+  const tokens = spacedNames.trim().split(/\s+/).filter(Boolean);
+  if (hadMetadataTail && tokens.length >= 4 && tokens.length <= 20 && tokens.length % 2 === 0) {
+    const names: string[] = [];
+    for (let index = 0; index < tokens.length; index += 2) {
+      names.push(`${tokens[index]} ${tokens[index + 1]}`);
+    }
+    return names;
+  }
+
+  return [text];
+}
+
 function normalizeAuthors(item: ParserItem): string[] | undefined {
   const candidates = [
     ...asStringArray(item.dcCreators),
@@ -123,7 +192,7 @@ function normalizeAuthors(item: ParserItem): string[] | undefined {
     ...asStringArray(item.author)
   ];
   const authors = candidates
-    .flatMap((value) => normalizeField(value).replace(/^by\s+/i, "").split(/\s*(?:;|\|)\s*/))
+    .flatMap(splitAuthorValue)
     .map((value) => value.trim())
     .filter((value, index, values) => value.length > 0 && values.indexOf(value) === index);
 
