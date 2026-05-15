@@ -100,6 +100,7 @@ describe("normalizeFeedItem", () => {
     expect(paper).toMatchObject({
       abstract: "",
       authors: ["Sydney Widell", "Caroline Gottschalk", "Rebecca Lave", "Eric Booth"],
+      firstAffiliation: "Freshwater & Marine Science, University of Wisconsin-Madison, USA",
       publishedAt: new Date("2026-04-21T07:00:00.000Z")
     });
   });

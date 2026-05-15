@@ -124,9 +124,48 @@ function parseScienceDirectAuthors(item: ParserItem): string[] {
     .filter((value, index, values) => value.length > 0 && values.indexOf(value) === index);
 }
 
+function affiliationHeadPattern(): string {
+  return (
+    "Department|School|College|Faculty|Freshwater|Institute|Ministry|State Key Laboratory|Key Laboratory|" +
+    "Laboratory|Centre|Center|University|Unit|Dipartimento|WorldPop"
+  );
+}
+
+function findTaylorFrancisAffiliationStart(value: string): RegExpExecArray | null {
+  return new RegExp(`\\s+a\\s+(?=${affiliationHeadPattern()}\\b)`, "i").exec(value);
+}
+
+function findTaylorFrancisAffiliationEnd(value: string): number {
+  const nextAffiliation = new RegExp(`(?:\\s|(?<=[A-Z]))[b-z]\\s+(?=${affiliationHeadPattern()}\\b)`, "i").exec(value);
+  const biography = /\s*[A-Z][A-Z.'’-]+(?:\s+[A-Z][A-Z.'’-]+){1,3}\s+is\s+(?:currently\s+)?(?:a|an|the)\s+/u.exec(
+    value
+  );
+  const starts = [nextAffiliation?.index, biography?.index].filter((index): index is number => index !== undefined);
+  return starts.length > 0 ? Math.min(...starts) : value.length;
+}
+
+function parseTaylorFrancisContributorMetadata(value: string): { authorText: string; firstAffiliation?: string } | null {
+  const normalized = normalizeField(value).replace(/^by\s+/i, "");
+  const affiliationStart = findTaylorFrancisAffiliationStart(normalized);
+  if (!affiliationStart) {
+    return null;
+  }
+
+  const authorText = normalized.slice(0, affiliationStart.index).trim();
+  const affiliationTextStart = affiliationStart.index + affiliationStart[0].length;
+  const affiliationTail = normalized.slice(affiliationTextStart);
+  const affiliationEnd = findTaylorFrancisAffiliationEnd(affiliationTail);
+  const firstAffiliation = affiliationTail.slice(0, affiliationEnd).trim();
+
+  return {
+    authorText,
+    ...(firstAffiliation ? { firstAffiliation } : {})
+  };
+}
+
 function stripAuthorMetadataTail(value: string): { text: string; hadMetadataTail: boolean } {
   const affiliationStart = value.search(
-    /\s+(?:[a-z]\s+)?(?:Department|School|College|Faculty|Freshwater|Institute|Ministry|State Key Laboratory|Key Laboratory|Laboratory|Centre|Center|University|Unit|Dipartimento|WorldPop)\b/
+    new RegExp(`\\s+(?:[a-z]\\s+)?(?:${affiliationHeadPattern()})\\b`, "i")
   );
   const rorAffiliationStart = value.search(/[a-z]https?:\/\/ror\.org\//i);
   const compactAffiliationStart = value.search(
@@ -163,9 +202,11 @@ function parseBiographyAuthorNames(value: string): string[] {
 }
 
 function splitAuthorValue(value: string): string[] {
-  const normalized = normalizeField(value).replace(/^by\s+/i, "");
+  const taylorFrancisMetadata = parseTaylorFrancisContributorMetadata(value);
+  const normalized = taylorFrancisMetadata?.authorText ?? normalizeField(value).replace(/^by\s+/i, "");
   const { text, hadMetadataTail } = stripAuthorMetadataTail(normalized);
-  if (!hadMetadataTail) {
+  const hasStructuredMetadata = Boolean(taylorFrancisMetadata) || hadMetadataTail;
+  if (!hasStructuredMetadata) {
     const biographyNames = parseBiographyAuthorNames(normalized);
     if (biographyNames.length > 1) {
       return biographyNames;
@@ -179,7 +220,7 @@ function splitAuthorValue(value: string): string[] {
   }
 
   const tokens = spacedNames.trim().split(/\s+/).filter(Boolean);
-  if (hadMetadataTail && tokens.length >= 4 && tokens.length <= 20 && tokens.length % 2 === 0) {
+  if (hasStructuredMetadata && tokens.length >= 4 && tokens.length <= 20 && tokens.length % 2 === 0) {
     const names: string[] = [];
     for (let index = 0; index < tokens.length; index += 2) {
       names.push(`${tokens[index]} ${tokens[index + 1]}`);
@@ -206,6 +247,23 @@ function normalizeAuthors(item: ParserItem): string[] | undefined {
   return fallbackAuthors.length > 0 ? fallbackAuthors : undefined;
 }
 
+function parseTaylorFrancisFirstAffiliation(item: ParserItem): string | undefined {
+  if (!isTaylorFrancisItem(item)) {
+    return undefined;
+  }
+
+  const firstAffiliation = [
+    ...asStringArray(item.dcCreators),
+    ...asStringArray(item.authors),
+    ...asStringArray(item.creator),
+    ...asStringArray(item.author)
+  ]
+    .map((value) => parseTaylorFrancisContributorMetadata(value)?.firstAffiliation)
+    .find((value): value is string => Boolean(value));
+
+  return firstAffiliation;
+}
+
 function normalizeFirstAffiliation(item: ParserItem): string | undefined {
   const candidates = [
     ...asStringArray(item.affiliations),
@@ -213,7 +271,7 @@ function normalizeFirstAffiliation(item: ParserItem): string | undefined {
     ...asStringArray(item.prismAffiliations)
   ];
   const firstAffiliation = candidates.map(normalizeField).find((value) => value.length > 0);
-  return firstAffiliation || undefined;
+  return firstAffiliation || parseTaylorFrancisFirstAffiliation(item);
 }
 
 function normalizeDate(item: ParserItem): Date | null {
