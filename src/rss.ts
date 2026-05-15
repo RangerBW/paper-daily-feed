@@ -102,6 +102,10 @@ function isScienceDirectItem(item: ParserItem): boolean {
   return [item.link, item.guid].some((value) => value?.toLowerCase().includes("sciencedirect.com"));
 }
 
+function isTaylorFrancisItem(item: ParserItem): boolean {
+  return [item.link, item.guid].some((value) => value?.toLowerCase().includes("tandfonline.com"));
+}
+
 function parseScienceDirectAuthors(item: ParserItem): string[] {
   if (!isScienceDirectItem(item)) {
     return [];
@@ -122,7 +126,7 @@ function parseScienceDirectAuthors(item: ParserItem): string[] {
 
 function stripAuthorMetadataTail(value: string): { text: string; hadMetadataTail: boolean } {
   const affiliationStart = value.search(
-    /\s+(?:[a-z]\s+)?(?:Department|School|College|Faculty|Institute|Ministry|State Key Laboratory|Key Laboratory|Laboratory|Centre|Center|University|Unit|Dipartimento|WorldPop)\b/
+    /\s+(?:[a-z]\s+)?(?:Department|School|College|Faculty|Freshwater|Institute|Ministry|State Key Laboratory|Key Laboratory|Laboratory|Centre|Center|University|Unit|Dipartimento|WorldPop)\b/
   );
   const rorAffiliationStart = value.search(/[a-z]https?:\/\/ror\.org\//i);
   const compactAffiliationStart = value.search(
@@ -160,12 +164,14 @@ function parseBiographyAuthorNames(value: string): string[] {
 
 function splitAuthorValue(value: string): string[] {
   const normalized = normalizeField(value).replace(/^by\s+/i, "");
-  const biographyNames = parseBiographyAuthorNames(normalized);
-  if (biographyNames.length > 1) {
-    return biographyNames;
+  const { text, hadMetadataTail } = stripAuthorMetadataTail(normalized);
+  if (!hadMetadataTail) {
+    const biographyNames = parseBiographyAuthorNames(normalized);
+    if (biographyNames.length > 1) {
+      return biographyNames;
+    }
   }
 
-  const { text, hadMetadataTail } = stripAuthorMetadataTail(normalized);
   const spacedNames = text.replace(/([a-z])([A-Z][a-z])/g, "$1 $2");
   const delimited = spacedNames.split(/\s*(?:;|\||,|\band\b)\s*/i);
   if (delimited.length > 1) {
@@ -211,14 +217,26 @@ function normalizeFirstAffiliation(item: ParserItem): string | undefined {
 }
 
 function normalizeDate(item: ParserItem): Date | null {
+  if (isTaylorFrancisItem(item)) {
+    const taylorFrancisDate = parseDateValue(item.prismCoverDate ?? item.prismPublicationDate);
+    if (taylorFrancisDate) {
+      return taylorFrancisDate;
+    }
+  }
+
   const rawDate =
     item.isoDate ?? item.pubDate ?? item.date ?? item.dcDate ?? item.prismPublicationDate ?? item.prismCoverDate;
-  const publishedAt = rawDate ? new Date(rawDate) : null;
-  if (publishedAt && !Number.isNaN(publishedAt.getTime())) {
+  const publishedAt = parseDateValue(rawDate);
+  if (publishedAt) {
     return publishedAt;
   }
 
   return parseScienceDirectPublicationDate(item);
+}
+
+function parseDateValue(value: string | undefined): Date | null {
+  const publishedAt = value ? new Date(value) : null;
+  return publishedAt && !Number.isNaN(publishedAt.getTime()) ? publishedAt : null;
 }
 
 function parseScienceDirectPublicationDate(item: ParserItem): Date | null {

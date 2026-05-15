@@ -85,6 +85,25 @@ describe("normalizeFeedItem", () => {
     expect(paper?.authors).toEqual(["Harriet Hawkins"]);
   });
 
+  it("parses current AAAG Taylor & Francis author and cover date metadata", () => {
+    const paper = normalizeFeedItem("AAAG", {
+      title: "Fixing Streams",
+      link: "https://www.tandfonline.com/doi/full/10.1080/24694452.2025.2592754?af=R",
+      contentSnippet: "Volume 116, Issue 4, null 2026, Page 786-804\n.",
+      dcDate: "2025-12-15T06:42:33Z",
+      prismCoverDate: "2026-04-21T07:00:00Z",
+      dcCreators: [
+        "Sydney Widell Caroline Gottschalk Rebecca Lave Eric Booth a Freshwater & Marine Science, University of Wisconsin-Madison, USAb Department of English, University of Wisconsin-Madison, USAc Department of Geography, Indiana University, USAd Department of Plant and Agroecosystem Sciences, University of Wisconsin-Madison, USASYDNEY WIDELL is the Watershed Coordinator with the Coon Creek Community Watershed Council. CAROLINE GOTTSCHALK is a Vilas Distinguished Achievement Professor."
+      ]
+    });
+
+    expect(paper).toMatchObject({
+      abstract: "",
+      authors: ["Sydney Widell", "Caroline Gottschalk", "Rebecca Lave", "Eric Booth"],
+      publishedAt: new Date("2026-04-21T07:00:00.000Z")
+    });
+  });
+
   it("drops Taylor & Francis bibliographic metadata descriptions", () => {
     const paper = normalizeFeedItem("Urban Geography", {
       title: "Taylor description only contains issue metadata",
