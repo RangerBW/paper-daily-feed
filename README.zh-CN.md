@@ -38,7 +38,7 @@
 
 <h2>快速开始</h2>
 
-配置只需几分钟且全部在 GitHub 上完成。Fork 仓库 -> 添加凭据 -> 启用工作流，大功告成！
+配置只需几分钟：Fork 仓库 -> 添加凭据 -> 启用工作流。
 
 - [1. Fork 仓库](#1-fork-仓库)
 - [2. 创建 Secrets](#2-创建-secrets)
@@ -47,43 +47,54 @@
 
 ### 1. Fork 仓库
 
-先创建一份属于你自己的项目副本：
+创建你自己的项目副本：
 
 1. 点击这里 [**Fork 仓库**](https://github.com/nehSgnaiL/paper-daily-feed/fork)。
-2. 选择你的个人 GitHub 账号作为目标位置，然后点击 **Create fork**。
+2. 选择你的 GitHub 账号，然后点击 **Create fork**。
 
 ### 2. 创建 Secrets
 
-部分功能需要密码或 API key 才能工作，例如发送邮件、使用 AI 或连接 Zotero。为了保护这些敏感信息，我们会把它们保存为 GitHub **Secrets**。
+邮件、AI、Zotero 需要密码或 API key。把它们保存为 GitHub **Secrets**。
 
-1. 进入仓库的 [Actions Secrets 页面](../../settings/secrets/actions)，或点击 **Settings ⚙️** → **Secrets and variables** → **Actions**。
-2. 确认你在 **Secrets** 标签页中，默认应该已经选中。
-3. 点击绿色的 **New repository secret** 按钮，按需创建下方列表中的凭据：
+1. 打开 [Actions Secrets](../../settings/secrets/actions)，或进入 **Settings ⚙️** → **Secrets and variables** → **Actions**。
+2. 保持在 **Secrets** 标签页。
+3. 点击 **New repository secret**，按需添加下方凭据：
+
+<h4><i>Email</i></h4>
 
 | Secret 名称 | 示例值 | 说明 | 备注 |
 | --- | --- | --- | --- |
 | `RECEIVER` | `reader@example.com` | 接收论文推送的邮箱。 | :email:`必填` |
 | `SENDER` | `example@qq.com` | 发送论文推送的邮箱。建议使用专用邮箱或备用邮箱。 | :email:`必填` |
-| `SENDER_PASSWORD` | `app-password-or-token` | 发件邮箱对应的**密码（或 APP Password / 授权码）**。<br><br>很多邮箱服务商要求使用专门的应用密码。可参考这些说明：[QQ 邮箱](https://wx.mail.qq.com/list/readtemplate?name=app_intro.html#/agreement/authorizationCode)、[Gmail](https://developers.google.com/workspace/gmail/imap/imap-smtp)、[163 邮箱](https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2a5feb28b66796d3b)、[Outlook](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040)。 | :email:`必填` |
-| `SMTP_SERVER` | `smtp.example.com` | 邮件发送服务器地址。请参考上方文档。 | :email:`必填` |
-| `SMTP_PORT` | `465` | SMTP 服务器端口。请参考上方文档。 | :email:`必填` |
-| `ZOTERO_ID` | `1234567` | 使用 Zotero 文库时填写。<br><br>在 [Zotero Settings](https://www.zotero.org/settings/security#applications) 的 `Create new private key` 按钮下面找到 `ZOTERO_ID`。可参考 [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-1-locate-zotero-settings)。 | :closed_book:`推荐` |
-| `ZOTERO_KEY` | `zotero-api-key` | Zotero API key。<br><br>在 [Zotero Settings](https://www.zotero.org/settings/security#applications) 点击 `Create new private key`，创建一个至少有 Read 权限的新 key。可参考 [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-2-create-a-key)。 | :closed_book:`推荐` |
-| `OPENAI_BASE_URL` | `https://api.siliconflow.cn/v1` | 用于生成 TLDR 摘要的 AI API 地址。不填写时会使用论文原始摘要。<br><br>*提示：可以在 [SiliconFlow](https://cloud.siliconflow.cn/i/p9BtMTtU) 获取免费 API，用于开源模型，例如 `Qwen/Qwen3-8B`。* | :robot:`推荐` |
+| `SENDER_PASSWORD` | `app-password-or-token` | 发件邮箱**密码、APP Password 或授权码**。<br><br>很多邮箱服务商要求应用密码：[QQ 邮箱](https://wx.mail.qq.com/list/readtemplate?name=app_intro.html#/agreement/authorizationCode)、[Gmail](https://developers.google.com/workspace/gmail/imap/imap-smtp)、[163 邮箱](https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2a5feb28b66796d3b)、[Outlook](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040)。 | :email:`必填` |
+| `SMTP_SERVER` | `smtp.example.com` | SMTP 服务器地址。参考上方文档。 | :email:`必填` |
+| `SMTP_PORT` | `465` | SMTP 服务器端口。参考上方文档。 | :email:`必填` |
+
+<h4><i>Zotero</i></h4>
+
+| Secret 名称 | 示例值 | 说明 | 备注 |
+| --- | --- | --- | --- |
+| `ZOTERO_ID` | `1234567` | 使用 Zotero 文库时填写。<br><br>在 [Zotero Settings](https://www.zotero.org/settings/security#applications) 的 `Create new private key` 下方找到。见 [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-1-locate-zotero-settings)。 | :closed_book:`推荐` |
+| `ZOTERO_KEY` | `zotero-api-key` | Zotero API key。<br><br>在 [Zotero Settings](https://www.zotero.org/settings/security#applications) 创建至少有 Read 权限的新 key。见 [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-2-create-a-key)。 | :closed_book:`推荐` |
+
+<h4><i>TLDR Summary</i></h4>
+
+| Secret 名称 | 示例值 | 说明 | 备注 |
+| --- | --- | --- | --- |
+| `OPENAI_BASE_URL` | `https://api.siliconflow.cn/v1` | TLDR 摘要 API 地址。留空则使用论文原始摘要。<br><br>*提示：[SiliconFlow](https://cloud.siliconflow.cn/i/p9BtMTtU) 可获取免费 API，用于开源模型，例如 `Qwen/Qwen3-8B`。* | :robot:`推荐` |
 | `OPENAI_API_KEY` | `sk-...` | 使用 TLDR 摘要 API 时填写对应 API key。 | :robot:`推荐` |
-| `EMBEDDING_BASE_URL` | `https://api.openai.com/v1` | 文本匹配所用的自定义 API。**通常可以留空。** 内置本地模型可以直接工作。 | :computer:`可选` |
-| `EMBEDDING_API_KEY` | `sk-...` | 使用 Embeddings API 进行文本匹配时填写对应 key。 | :computer:`可选` |
+
 
 ### 3. 创建变量
 
-接下来添加你的应用设置。因为这些配置不是密码等敏感信息，所以使用 **Variable**，不要放在 Secret 中。
+添加应用设置。使用 **Variable**，不要放进 Secret。
 
-1. 进入仓库的 [Actions Variables 页面](../../settings/variables/actions)，或点击 **Settings ⚙️** → **Secrets and variables** → **Actions**，然后切换到 **Variables** 标签页。
-2. 点击绿色的 **New repository variable** 按钮。
+1. 打开 [Actions Variables](../../settings/variables/actions)，或进入 **Settings ⚙️** → **Secrets and variables** → **Actions** → **Variables**。
+2. 点击 **New repository variable**。
 3. **Name** 填写：`APP_CONFIG`
-4. **Value** 粘贴你的配置，例如下面的示例。
+4. **Value** 粘贴配置，例如：
 
-   **`APP_CONFIG` 示例值：**
+   **`APP_CONFIG` 示例：**
 
     ```json5
     {
@@ -133,20 +144,20 @@
 
 > [!TIP]
 > **自定义兴趣来源：**
-> 你可以使用文本画像、Zotero，或同时使用两者。上面的示例是最小配置。要启用某个来源，只需要把 `"enabled": false` 改成 `true`。
+> 可使用文本画像、Zotero，或两者同时使用。示例为最小配置。启用来源时，把 `"enabled": false` 改成 `true`。
 > 
 > **需要更多选项？** 见 [自定义](#customization) 部分的高级设置。
 
 ### 4. 启用工作流并完成
 
-GitHub 会默认暂停 fork 仓库中的自动任务。我们来启用它们：
+GitHub 默认暂停 fork 仓库中的工作流。启用它们：
 
-1. 进入仓库顶部的 ▶️ [**Actions**](../../actions) 标签页，点击绿色按钮 `I understand my workflows, go ahead and enable them`。
-2. **启用每日推送：** 在左侧栏点击 [**Daily paper feeds**](../../actions/workflows/daily.yml)，然后点击右上角的 `Enable workflow`。
-3. **启用自动更新：** 在左侧栏点击 [**Repository maintenance**](../../actions/workflows/maintenance.yml)，然后点击 `Enable workflow`。
-4. **运行测试：** 在左侧栏点击 [**Test paper feeds**](../../actions/workflows/test.yml)。点击右侧的 **Run workflow** 下拉按钮，再点击绿色 **Run workflow**。
+1. 打开 ▶️ [**Actions**](../../actions)，点击 `I understand my workflows, go ahead and enable them`。
+2. **每日推送：** 打开 [**Daily paper feeds**](../../actions/workflows/daily.yml)，点击 `Enable workflow`。
+3. **自动更新：** 打开 [**Repository maintenance**](../../actions/workflows/maintenance.yml)，点击 `Enable workflow`。
+4. **运行测试：** 打开 [**Test paper feeds**](../../actions/workflows/test.yml)，点击 **Run workflow** → **Run workflow**。
 
-**完成。** 😄 如果测试通过 ✅，你会收到一封简短邮件。之后你会收到自动每日邮件，也可以随时手动运行 [**Daily paper feeds**](../../actions/workflows/daily.yml) 工作流来立即获取一次推送。
+**完成。** 测试通过后会收到一封简短邮件。之后系统会每日自动推送，也可手动运行 [**Daily paper feeds**](../../actions/workflows/daily.yml) 立即获取一次。
 
 ---
 

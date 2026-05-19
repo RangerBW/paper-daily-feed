@@ -38,52 +38,62 @@
 
 <h2>Get started</h2>
 
-Setup takes just a few minutes on GitHub. All you need to do is fork the repo, add your credentials, and turn the workflows on!
+Setup takes a few minutes on GitHub: fork, add credentials, enable workflows.
 
-- [1. Fork the Repository](#1-fork-the-repository)
+- [1. Fork the repository](#1-fork-the-repository)
 - [2. Create Secrets](#2-create-secrets)
 - [3. Create Variable](#3-create-variable)
 - [4. Enable workflow \& Done](#4-enable-workflow--done)
 
-### 1. Fork the Repository
+### 1. Fork the repository
 
-To get started, create your own copy of this project:
+Create your own copy:
 
 1. Click here to [**Fork the repository**](https://github.com/nehSgnaiL/paper-daily-feed/fork).
-2. Choose your personal GitHub account as the destination and click **Create fork**.
+2. Choose your GitHub account, then click **Create fork**.
 
 ### 2. Create Secrets
 
-Some features (like sending emails, using AI, or connecting to Zotero) need passwords or API keys to work. To keep this sensitive data perfectly safe, we will store them as GitHub **Secrets**.
+Email, AI, and Zotero need passwords or API keys. Store them as GitHub **Secrets**.
 
-1. Go to your repository's [Actions Secrets page](../../settings/secrets/actions) (or click **Settings ⚙️** → **Secrets and variables** → **Actions**). 
-2. Make sure you are on the **Secrets** tab (it should be selected by default).
-3. Click the green **New repository secret** button to create the credentials you need from the list below:
+1. Open [Actions Secrets](../../settings/secrets/actions), or go to **Settings ⚙️** → **Secrets and variables** → **Actions**.
+2. Stay on the **Secrets** tab.
+3. Click **New repository secret**, then add what you need below:
+
+<h4><i>Email</i></h4>
 
 | Secret Name | Example of Secret Value | Description | Note |
 | --- | --- | --- | --- |
-| `RECEIVER` | `reader@example.com` |  Email address for **receiving** feeds. | :email:`Required` |
-| `SENDER` | `example@qq.com` |  Email account used to **send** feeds. Suggest using a dedicated/secondary account. | :email:`Required` |
-| `SENDER_PASSWORD` | `app-password-or-token` | The **password (or APP Password / Auth Code)** for the sender email. <br><br>Many providers require a special app password. Check the guides here: [QQ Mail](https://wx.mail.qq.com/list/readtemplate?name=app_intro.html#/agreement/authorizationCode), [Gmail](https://developers.google.com/workspace/gmail/imap/imap-smtp), [163 Mail](https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2a5feb28b66796d3b), [Outlook](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040).  | :email:`Required` |
-| `SMTP_SERVER` | `smtp.example.com` |  SMTP server for sending email. Check the above docs. | :email:`Required` |
-| `SMTP_PORT` | `465` |  Corresponding SMTP server port. Check the above docs. | :email:`Required` |
-| `ZOTERO_ID` | `1234567` | Set it when using Zotero Library.<br><br> Get `ZOTERO_ID` under the button `Create new private key` in [Zotero Settings](https://www.zotero.org/settings/security#applications). See [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-1-locate-zotero-settings). | :closed_book:`Recommended` |
-| `ZOTERO_KEY` | `zotero-api-key` | Corresponding Zotero API key. <br><br> Get `ZOTERO_KEY` by creating a new key with appropriate permissions (at least "Read" access) in [Zotero Settings](https://www.zotero.org/settings/security#applications). See [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-2-create-a-key). | :closed_book:`Recommended` |
-| `OPENAI_BASE_URL` | `https://api.siliconflow.cn/v1` | The URL for an AI API to generate TLDR summaries. (If left blank, standard paper abstracts are used). <br><br> *Tip: Get a free API at [SiliconFlow](https://cloud.siliconflow.cn/i/p9BtMTtU) to use open source LLMs (e.g., `Qwen/Qwen3-8B`).* | :robot:`Recommended` |
-| `OPENAI_API_KEY` | `sk-...` | Set corresponding API key if you use API for TLDR summaries. | :robot:`Recommended` |
-| `EMBEDDING_BASE_URL` | `https://api.openai.com/v1` | Custom API for text matching. **Generally, leave this empty.** The built-in local model works fine on its own. | :computer:`Optional` |
-| `EMBEDDING_API_KEY` | `sk-...` | Set corresponding key if you use Embeddings API for text matching. | :computer:`Optional` |
+| `RECEIVER` | `reader@example.com` | Email address that **receives** feeds. | :email:`Required` |
+| `SENDER` | `example@qq.com` | Email account that **sends** feeds. A dedicated/secondary account is recommended. | :email:`Required` |
+| `SENDER_PASSWORD` | `app-password-or-token` | Sender email **password, app password, or auth code**.<br><br>Many providers require an app password: [QQ Mail](https://wx.mail.qq.com/list/readtemplate?name=app_intro.html#/agreement/authorizationCode), [Gmail](https://developers.google.com/workspace/gmail/imap/imap-smtp), [163 Mail](https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2a5feb28b66796d3b), [Outlook](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040). | :email:`Required` |
+| `SMTP_SERVER` | `smtp.example.com` | SMTP server. Check your provider docs above. | :email:`Required` |
+| `SMTP_PORT` | `465` | SMTP port. Check your provider docs above. | :email:`Required` |
+
+<h4><i>Zotero</i></h4>
+
+| Secret Name | Example of Secret Value | Description | Note |
+| --- | --- | --- | --- |
+| `ZOTERO_ID` | `1234567` | Set when using Zotero Library.<br><br>Find it below `Create new private key` in [Zotero Settings](https://www.zotero.org/settings/security#applications). See [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-1-locate-zotero-settings). | :closed_book:`Recommended` |
+| `ZOTERO_KEY` | `zotero-api-key` | Zotero API key.<br><br>Create a new key with at least Read access in [Zotero Settings](https://www.zotero.org/settings/security#applications). See [Zotero API Key Guide](https://oeysan.github.io/c2z/articles/zotero_api.html#step-2-create-a-key). | :closed_book:`Recommended` |
+
+<h4><i>TLDR Summary</i></h4>
+
+| Secret Name | Example of Secret Value | Description | Note |
+| --- | --- | --- | --- |
+| `OPENAI_BASE_URL` | `https://api.siliconflow.cn/v1` | AI API base URL for TLDR summaries. Blank = use original abstracts.<br><br>*Tip: [SiliconFlow](https://cloud.siliconflow.cn/i/p9BtMTtU) has free API access for open source LLMs, e.g. `Qwen/Qwen3-8B`.* | :robot:`Recommended` |
+| `OPENAI_API_KEY` | `sk-...` | API key for TLDR summaries. | :robot:`Recommended` |
 
 ### 3. Create Variable
 
-Next, we need to add your settings. Because this isn't sensitive data (like a password), we will add it as a **Variable** instead of a Secret.
+Add app settings as a **Variable**, not a Secret.
 
-1. Go to your repository's [Actions Variables page](../../settings/variables/actions) (or click **Settings ⚙️** → **Secrets and variables** → **Actions**, then make sure to click the **Variables** tab).
-2. Click the green **New repository variable** button.
-3. For the **Name**, type exactly: `APP_CONFIG`
-4. For the **Value**, paste your configuration (like the example below). 
+1. Open [Actions Variables](../../settings/variables/actions), or go to **Settings ⚙️** → **Secrets and variables** → **Actions** → **Variables**.
+2. Click **New repository variable**.
+3. **Name**: `APP_CONFIG`
+4. **Value**: paste your config, for example:
    
-   **Example `APP_CONFIG` value:**
+   **Example `APP_CONFIG`:**
 
     ```json5
     {
@@ -133,20 +143,20 @@ Next, we need to add your settings. Because this isn't sensitive data (like a pa
 
 > [!TIP]
 > **Customizing your sources:** 
-> You can use your Textual profile, Zotero, or both! The example above shows a minimal setup. To turn a source on, just change `"enabled": false` to `true`.
+> Use a text profile, Zotero, or both. The example is minimal. To enable a source, change `"enabled": false` to `true`.
 > 
 > **Need more options?** See the [Customization](#customization) section for advanced settings.
 
 ### 4. Enable workflow & Done
 
-GitHub pauses automated tasks in forked repos by default. Let's turn them on:
+GitHub pauses workflows in forked repos by default. Enable them:
 
-1. Go to the ▶️ [**Actions**](../../actions) tab at the top of your repository, and click the green button `I understand my workflows, go ahead and enable them`.
-2. **Enable daily feeds:** Click [**Daily paper feeds**](../../actions/workflows/daily.yml) in the left sidebar, then click `Enable workflow` (right top).
-3. **Enable auto-updates:** Click [**Repository maintenance**](../../actions/workflows/maintenance.yml) in the left sidebar, and click `Enable workflow`.
-4. **Run test:** Click [**Test paper feeds**](../../actions/workflows/test.yml) in the left sidebar. Click the **Run workflow** dropdown on the right, then hit the green button **Run workflow**.
+1. Open ▶️ [**Actions**](../../actions), then click `I understand my workflows, go ahead and enable them`.
+2. **Daily feeds:** Open [**Daily paper feeds**](../../actions/workflows/daily.yml), then click `Enable workflow`.
+3. **Auto-updates:** Open [**Repository maintenance**](../../actions/workflows/maintenance.yml), then click `Enable workflow`.
+4. **Test:** Open [**Test paper feeds**](../../actions/workflows/test.yml), then click **Run workflow** → **Run workflow**.
 
-**Done!** 😄 If the test passes ✅, you'll get a short email. You will now receive automated daily emails, and you can manually run the [**Daily paper feeds**](../../actions/workflows/daily.yml) workflow anytime to get an instant update.
+**Done.** After the test passes, you get a short email. Daily emails run automatically. You can also manually run [**Daily paper feeds**](../../actions/workflows/daily.yml) anytime.
 
 ---
 
