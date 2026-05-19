@@ -148,6 +148,10 @@ const journals: Journal[] = [
     name: "Remote Sensing of Environment",
     abbr: "RSE",
     rss: "https://rss.sciencedirect.com/publication/science/00344257"
+  },
+  {
+    name: "Scientific Data",
+    rss: "https://www.nature.com/sdata.rss"
   }
 ];
 
