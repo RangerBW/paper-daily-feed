@@ -116,12 +116,18 @@ const journals: Journal[] = [
   },
   {
     name: "Transportation Research Part C: Emerging Technologies",
+    abbr: "TR_C",
     rss: "https://rss.sciencedirect.com/publication/science/0968090X",
   },
   {
     name: "IEEE Transactions on Intelligent Transportation Systems",
     abbr: "IEEE T-ITS",
     rss: "https://ieeexplore.ieee.org/rss/TOC6979.XML"
+  },
+  {
+    name: "IEEE Transactions on Geoscience and Remote Sensing",
+    abbr: "IEEE TGRS",
+    rss: "https://ieeexplore.ieee.org/rss/TOC36.XML"
   },
   {
     name: "International Journal of Digital Earth",
@@ -132,6 +138,16 @@ const journals: Journal[] = [
     name: "Sustainable Cities and Society",
     abbr: "SCS",
     rss: "https://rss.sciencedirect.com/publication/science/22106707"
+  },
+  {
+    name: "ISPRS Journal of Photogrammetry and Remote Sensing",
+    abbr: "ISPRS P&RS",
+    rss: "https://rss.sciencedirect.com/publication/science/09242716"
+  },
+  {
+    name: "Remote Sensing of Environment",
+    abbr: "RSE",
+    rss: "https://rss.sciencedirect.com/publication/science/00344257"
   }
 ];
 
