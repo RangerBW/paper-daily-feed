@@ -60,7 +60,7 @@ Email, AI, and Zotero need passwords or API keys. Store them as GitHub **Secrets
 2. Stay on the **Secrets** tab.
 3. Click **New repository secret**, then add what you need below:
 
-| Note | Secret Name | Example of Secret Value | Description |
+| Requirement | Secret Name | Example of Secret Value | Description |
 | --- | --- | --- | --- |
 | :email:`Required` | `RECEIVER` | `reader@example.com` | Email address that **receives** feeds. |
 | :email:`Required` | `SENDER` | `example@qq.com` | Email account that **sends** feeds. A dedicated/secondary account is recommended. |

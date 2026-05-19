@@ -60,7 +60,7 @@
 2. 保持在 **Secrets** 标签页。
 3. 点击 **New repository secret**，按需添加下方凭据：
 
-| 备注 | Secret 名称 | 示例值 | 说明 |
+| 要求 | Secret 名称 | 示例值 | 说明 |
 | --- | --- | --- | --- |
 | :email:`必填` | `RECEIVER` | `reader@example.com` | 接收论文推送的邮箱。 |
 | :email:`必填` | `SENDER` | `example@qq.com` | 发送论文推送的邮箱。建议使用专用邮箱或备用邮箱。 |
