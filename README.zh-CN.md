@@ -26,9 +26,9 @@
 <div align="center">
   <a href="https://doi.org/10.1016/j.tbs.2025.101152" target="_blank" rel="noopener noreferrer">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="./docs/email_render_example-dark.svg" />
-      <source media="(prefers-color-scheme: light)" srcset="./docs/email_render_example.svg" />
-      <img alt="paper-daily-feed" src="./docs/email_render_example.svg" width="650"/>
+      <source media="(prefers-color-scheme: dark)" srcset="./docs/email_preview_example-dark.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="./docs/email_preview_example.svg" />
+      <img alt="paper-daily-feed" src="./docs/email_preview_example.svg" width="800"/>
     </picture>
   </a>
 </div>

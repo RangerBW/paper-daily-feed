@@ -1,0 +1,94 @@
+<svg width="1200" height="760" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Daily paper feeds email system preview</title>
+  <desc id="desc">Email client UI showing a received Daily paper feeds recommendation email.</desc>
+
+  <foreignObject x="0" y="0" width="1200" height="760">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="width:1200px;height:760px;background:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;color:#1d1d1f;box-sizing:border-box;padding:46px 64px;">
+      <div style="width:1072px;height:668px;background:#ffffff;border:1px solid #c8e2ff;border-radius:28px;box-shadow:0 24px 56px rgba(0,87,184,0.16);overflow:hidden;box-sizing:border-box;">
+        <div style="height:62px;background:#f7fbff;border-bottom:1px solid #dcecff;display:flex;align-items:center;gap:28px;padding:0 32px;box-sizing:border-box;">
+          <div style="display:flex;gap:10px;flex:0 0 auto;">
+            <span style="width:14px;height:14px;border-radius:50%;background:#ff5f57;display:block;"></span>
+            <span style="width:14px;height:14px;border-radius:50%;background:#ffbd2e;display:block;"></span>
+            <span style="width:14px;height:14px;border-radius:50%;background:#28c840;display:block;"></span>
+          </div>
+          <div style="width:392px;height:27px;border-radius:14px;background:#e8f4ff;color:#53677d;font-size:13px;font-weight:500;display:flex;align-items:center;padding:0 24px;box-sizing:border-box;">Search mail</div>
+        </div>
+
+        <div style="height:606px;display:grid;grid-template-columns:188px 308px 1fr;">
+          <aside style="background:#f4f9ff;border-right:1px solid #dcecff;padding:88px 20px 0 22px;box-sizing:border-box;">
+            <div style="height:34px;border-radius:17px;background:#e8f4ff;color:#007aff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-sizing:border-box;">
+              <span>Inbox</span>
+              <span>12</span>
+            </div>
+            <div style="margin-top:28px;color:#6e6e73;font-size:14px;font-weight:500;line-height:44px;padding-left:36px;">
+              <div>Starred</div>
+              <div>Archive</div>
+              <div>Research</div>
+            </div>
+          </aside>
+
+          <section style="background:#fbfdff;border-right:1px solid #dcecff;padding:28px 19px;box-sizing:border-box;">
+            <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:25px;line-height:1.12;margin:0 0 6px;font-weight:700;letter-spacing:0;">Inbox</h2>
+            <p style="font-size:13px;line-height:1.4;color:#6e6e73;margin:0 0 26px;">12 unread messages</p>
+
+            <article style="height:104px;border-radius:16px;background:#e8f4ff;border:1px solid #b9dcff;position:relative;padding:14px 18px 14px 60px;box-sizing:border-box;">
+              <div style="position:absolute;left:14px;top:14px;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#007aff,#4da3ff);color:white;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;">D</div>
+              <time style="position:absolute;right:18px;top:17px;font-size:12px;font-weight:600;color:#007aff;white-space:nowrap;">09:00</time>
+              <div style="min-width:0;padding-right:48px;">
+                <p style="font-size:14px;font-weight:600;line-height:1.28;margin:0 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Daily Paper Feeds</p>
+                <p style="font-size:13px;font-weight:600;line-height:1.28;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Paper feed for 20th May 2026</p>
+                <p style="font-size:12px;line-height:1.35;color:#5f6f83;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Daily paper recommendations selected for your research interests.</p>
+              </div>
+            </article>
+          </section>
+
+          <main style="background:#ffffff;padding:30px 42px;box-sizing:border-box;">
+            <header style="display:grid;grid-template-columns:1fr auto;align-items:start;column-gap:24px;margin-bottom:14px;">
+              <div style="min-width:0;">
+                <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:26px;line-height:1.15;margin:0 0 7px;font-weight:650;letter-spacing:0;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Paper feed for 20th May 2026</h2>
+                <p style="margin:0;color:#6e6e73;font-size:13px;line-height:1.35;">From Daily Paper Feeds</p>
+              </div>
+              <time style="font-size:13px;color:#6e6e73;line-height:1.4;margin-top:5px;white-space:nowrap;">Today, 09:00</time>
+            </header>
+            <div style="height:1px;background:#eef4fb;margin:14px 0 16px;"></div>
+
+            <div style="width:500px;height:430px;border-radius:20px;background:#e8f4ff;padding:25px 46px;box-sizing:border-box;overflow:hidden;">
+              <div style="width:600px;transform:scale(.68);transform-origin:top left;background:#e8f4ff;">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;border-collapse:collapse;">
+                  <tr>
+                    <td align="center" style="padding:10px 2px 26px 2px;text-align:center;">
+                      <p style="margin:0 0 8px 0;color:#007aff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">Research Bulletin</p>
+                      <h1 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:36px;line-height:1.12;margin:0;color:#007aff;font-weight:700;letter-spacing:0;">Daily paper feeds</h1>
+                      <p style="margin:12px 0 0 0;color:#6e6e73;font-size:15px;line-height:1.55;">A recommendation of papers based on your research interests.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 18px 0;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;background:#ffffff;border:1px solid #d9ebff;border-radius:18px;box-shadow:0 8px 24px rgba(0,122,255,.08);">
+                        <tr>
+                          <td style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;color:#1d1d1f;">
+                            <p style="margin:0 0 8px 0;color:#007aff;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Travel Behaviour and Society · 2026-01-01</p>
+                            <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:24px;line-height:1.24;margin:0 0 12px 0;color:#1d1d1f;font-weight:700;letter-spacing:0;">Predicting short-term urban bike sharing demand in a coupled continuous and network space</h2>
+                            <p style="margin:0 0 8px 0;color:#424245;font-size:14px;line-height:1.45;">Shen Liang, Yang Xu, Guangyue Li, Xiaohu Zhang, Qiuping Li</p>
+                            <p style="display:inline-block;margin:0;padding:8px 13px;border-radius:999px;background:#007aff;color:#ffffff;font-size:13px;font-weight:700;">Recommendation score: 57.9%</p>
+                            <p style="margin:16px 0 0;color:#424245;font-size:14px;line-height:1.6;"><strong style="color:#1d1d1f;">TLDR:</strong> GeoTopo-Net jointly models dependencies in continuous and network spaces to improve short-term urban bike sharing demand prediction.</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding:18px 2px 4px 2px;text-align:center;color:#6e6e73;font-size:13px;line-height:1.6;">
+                      <p style="margin:0;">Built with <span style="color:#007aff;font-weight:700;">paper-daily-feed</span> by <span style="color:#007aff;font-weight:700;">nehSgnaiL</span>.</p>
+                      <p style="margin:8px 0 0 0;"><span style="color:inherit;font-size:11px;text-decoration:underline;">Unsubscribe</span></p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>
