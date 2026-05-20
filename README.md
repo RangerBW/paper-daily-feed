@@ -28,7 +28,7 @@
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="./docs/email_preview_example-dark.svg" />
       <source media="(prefers-color-scheme: light)" srcset="./docs/email_preview_example.svg" />
-      <img alt="paper-daily-feed" src="./docs/email_preview_example.svg" width="800"/>
+      <img alt="paper-daily-feed" src="./docs/email_preview_example.svg" width="1000"/>
     </picture>
   </a>
 </div>
