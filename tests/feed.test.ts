@@ -133,6 +133,50 @@ describe("normalizeFeedItem", () => {
     );
   });
 
+  it("splits Taylor authors before Urban affiliation metadata", () => {
+    const paper = normalizeFeedItem("IJGIS", {
+      title: "Street semantic tree",
+      link: "https://www.tandfonline.com/doi/full/10.1080/example?af=R",
+      dcCreators: [
+        "Huihai Wang William Davis Yiming Xu Justin Yu Gengchen Mai Junfeng Jiao a Urban Information Lab"
+      ]
+    });
+
+    expect(paper?.authors).toEqual([
+      "Huihai Wang",
+      "William Davis",
+      "Yiming Xu",
+      "Justin Yu",
+      "Gengchen Mai",
+      "Junfeng Jiao"
+    ]);
+    expect(paper?.firstAffiliation).toBe("Urban Information Lab");
+  });
+
+  it("ends compact Taylor affiliation before lowercase marker after country text", () => {
+    const paper = normalizeFeedItem("AAAG", {
+      title: "Speculating on Social Media Traffic",
+      link: "https://www.tandfonline.com/doi/full/10.1080/example?af=R",
+      dcCreators: [
+        "Di Wu, Chen Li a School of Geography, Nanjing Normal University, Chinab Department of Social Sciences and Policy Studies, The Education University of Hong Kong, Hong Kong"
+      ]
+    });
+
+    expect(paper?.authors).toEqual(["Di Wu", "Chen Li"]);
+    expect(paper?.firstAffiliation).toBe("School of Geography, Nanjing Normal University, China");
+  });
+
+  it("splits Taylor authors before Graduate affiliation metadata", () => {
+    const paper = normalizeFeedItem("AAAG", {
+      title: "Pandemic, People, and Street Crime",
+      link: "https://www.tandfonline.com/doi/full/10.1080/example?af=R",
+      dcCreators: ["Yuta Takahashi, Tomoki Nakaya, a Graduate School of Environmental Studies, Nagoya University"]
+    });
+
+    expect(paper?.authors).toEqual(["Yuta Takahashi", "Tomoki Nakaya"]);
+    expect(paper?.firstAffiliation).toBe("Graduate School of Environmental Studies, Nagoya University");
+  });
+
   it("drops Taylor & Francis bibliographic metadata descriptions", () => {
     const paper = normalizeFeedItem("Urban Geography", {
       title: "Taylor description only contains issue metadata",

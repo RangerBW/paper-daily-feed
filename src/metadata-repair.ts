@@ -81,8 +81,12 @@ async function repair(
   loadNerPipeline: LoadNerPipeline,
   model: string
 ): Promise<RecommendedPaper[]> {
+  console.log(`[metadata-repair] loading NER model ${model}`);
   const ner = await loadNerPipeline(model);
+  console.log(`[metadata-repair] loaded NER model; repairing ${recommendations.length} recommendations`);
   const repaired: RecommendedPaper[] = [];
+  let repairedAuthors = 0;
+  let repairedAffiliations = 0;
 
   for (const paper of recommendations) {
     const entities = await ner(metadataText(paper));
@@ -90,13 +94,28 @@ async function repair(
     const affiliation = groups(entities, "ORG")
       .sort((left, right) => right.length - left.length)
       .find((value) => shouldUseAffiliation(value, paper.firstAffiliation));
+    const useAuthors = shouldUseAuthors(authors, paper.authors);
+    if (useAuthors) {
+      repairedAuthors += 1;
+    }
+    if (affiliation) {
+      repairedAffiliations += 1;
+    }
+    if (useAuthors || affiliation) {
+      console.log(
+        `[metadata-repair] repaired "${paper.title}": authors="${(useAuthors ? authors : paper.authors ?? []).join(", ")}"; firstAffiliation="${affiliation ?? paper.firstAffiliation ?? ""}"`
+      );
+    }
     repaired.push({
       ...paper,
-      ...(shouldUseAuthors(authors, paper.authors) ? { authors } : {}),
+      ...(useAuthors ? { authors } : {}),
       ...(affiliation ? { firstAffiliation: affiliation } : {})
     });
   }
 
+  console.log(
+    `[metadata-repair] done; authors repaired for ${repairedAuthors}/${recommendations.length}, affiliations repaired for ${repairedAffiliations}/${recommendations.length}`
+  );
   return repaired;
 }
 
@@ -111,7 +130,8 @@ export async function repairRecommendationMetadata(
 
   try {
     return await withTimeout(repair(recommendations, loadNerPipeline, config.model), config.timeoutMs);
-  } catch {
+  } catch (error) {
+    console.log(`[metadata-repair] skipped: ${error instanceof Error ? error.message : String(error)}`);
     return recommendations;
   }
 }

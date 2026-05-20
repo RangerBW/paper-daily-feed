@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { repairRecommendationMetadata } from "../src/metadata-repair.js";
 import type { MetadataRepairConfig } from "../src/app-config.js";
 import type { RecommendedPaper } from "../src/types.js";
@@ -25,6 +25,10 @@ function paper(overrides: Partial<RecommendedPaper> = {}): RecommendedPaper {
 }
 
 describe("repairRecommendationMetadata", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("keeps parsed metadata when repair is disabled", async () => {
     const recommendations = [paper()];
 
@@ -65,6 +69,7 @@ describe("repairRecommendationMetadata", () => {
   });
 
   it("keeps current metadata when NER load fails or times out", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const recommendations = [paper()];
 
     await expect(
@@ -83,5 +88,41 @@ describe("repairRecommendationMetadata", () => {
         }
       )
     ).resolves.toEqual(recommendations);
+
+    expect(logSpy.mock.calls.flat().join("\n")).toContain("[metadata-repair] skipped: model unavailable");
+    expect(logSpy.mock.calls.flat().join("\n")).toContain("[metadata-repair] skipped: metadata repair timeout");
+  });
+
+  it("logs metadata repair progress and counts", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const recommendations = [
+      paper({
+        authors: ["Jun Zhang Andrew Cox Jing Wang"],
+        firstAffiliation: "School",
+        metadataText:
+          "Jun Zhang Andrew Cox Jing Wang a School of Information, Journalism and Communication, University of Sheffield"
+      })
+    ];
+
+    await repairRecommendationMetadata(recommendations, enabledConfig, async () => async () => [
+      { entity: "B-PER", word: "Jun" },
+      { entity: "I-PER", word: "Zhang" },
+      { entity: "B-PER", word: "Andrew" },
+      { entity: "I-PER", word: "Cox" },
+      { entity: "B-PER", word: "Jing" },
+      { entity: "I-PER", word: "Wang" },
+      { entity: "B-ORG", word: "School" },
+      { entity: "I-ORG", word: "of" },
+      { entity: "I-ORG", word: "Information" },
+      { entity: "I-ORG", word: "University" }
+    ]);
+
+    expect(logSpy.mock.calls.flat().join("\n")).toContain("[metadata-repair] loading NER model ner-test");
+    expect(logSpy.mock.calls.flat().join("\n")).toContain(
+      "[metadata-repair] done; authors repaired for 1/1, affiliations repaired for 1/1"
+    );
+    expect(logSpy.mock.calls.flat().join("\n")).toContain(
+      '[metadata-repair] repaired "AI Urbanism": authors="Jun Zhang, Andrew Cox, Jing Wang"; firstAffiliation="School of Information University"'
+    );
   });
 });

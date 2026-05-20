@@ -127,8 +127,8 @@ function parseScienceDirectAuthors(item: ParserItem): string[] {
 function affiliationHeadPattern(): string {
   return (
     "Academy|Administration|Agency|Asia Research|Business|Centre|Center|College|Department|Dipartimento|Division|" +
-    "Faculty|Freshwater|Group|Institute|Key Laboratory|Laboratory|Ministry|National|Program|Research Center|" +
-    "Research Centre|School|State Key Laboratory|Unit|University|WorldPop"
+    "Faculty|Freshwater|Graduate|Group|Institute|Key Laboratory|Laboratory|Ministry|National|Program|" +
+    "Research Center|Research Centre|School|State Key Laboratory|Unit|University|Urban|WorldPop"
   );
 }
 
@@ -137,13 +137,23 @@ function findTaylorFrancisAffiliationStart(value: string): RegExpExecArray | nul
 }
 
 function findTaylorFrancisAffiliationEnd(value: string): number {
-  const nextAffiliation = new RegExp(`(?:\\s[b-z]|(?<=[A-Z])[b-z])\\s+(?=${affiliationHeadPattern()}\\b)`, "u").exec(
+  const affiliationHead = affiliationHeadPattern();
+  const markedAffiliation = new RegExp(`(?:\\s[b-z]|(?<=[A-Z])[b-z])\\s+(?=${affiliationHead}\\b)`, "u").exec(
     value
   );
+  const compactCountryAffiliation = new RegExp(
+    `\\b(?:China|Hong Kong|Japan|Singapore|USA|US|UK|Canada|Australia|Netherlands|Italy)([b-z])\\s+(?=${affiliationHead}\\b)`,
+    "u"
+  ).exec(value);
+  const compactCountryMarkerIndex = compactCountryAffiliation
+    ? compactCountryAffiliation.index + compactCountryAffiliation[0].lastIndexOf(compactCountryAffiliation[1] ?? "")
+    : undefined;
   const biography = /\s*[A-Z][A-Z.'’-]+(?:\s+[A-Z][A-Z.'’-]+){1,3}\s+is\s+(?:currently\s+)?(?:a|an|the)\s+/u.exec(
     value
   );
-  const starts = [nextAffiliation?.index, biography?.index].filter((index): index is number => index !== undefined);
+  const starts = [markedAffiliation?.index, compactCountryMarkerIndex, biography?.index].filter(
+    (index): index is number => index !== undefined
+  );
   return starts.length > 0 ? Math.min(...starts) : value.length;
 }
 
