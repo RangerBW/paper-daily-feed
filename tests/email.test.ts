@@ -61,6 +61,29 @@ describe("renderEmail", () => {
     expect(renderEmail([])).toContain("No recommended papers today");
   });
 
+  it("renders recommended papers from highest score to lowest score", () => {
+    const html = renderEmail([
+      {
+        journal: "Science",
+        title: "Low score paper",
+        abstract: "",
+        url: "https://example.test/low",
+        publishedAt: null,
+        score: 0.4
+      },
+      {
+        journal: "Nature",
+        title: "High score paper",
+        abstract: "",
+        url: "https://example.test/high",
+        publishedAt: null,
+        score: 0.9
+      }
+    ]);
+
+    expect(html.indexOf("High score paper")).toBeLessThan(html.indexOf("Low score paper"));
+  });
+
   it("hides unavailable metadata and omits match context", () => {
     const html = renderEmail([
       {

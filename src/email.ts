@@ -116,10 +116,11 @@ function renderPaper(paper: RenderablePaper): string {
 export function renderEmail(papers: RecommendedPaper[]): string;
 export function renderEmail(papers: RenderablePaper[]): string;
 export function renderEmail(papers: RenderablePaper[]): string {
+  const sortedPapers = [...papers].sort((left, right) => right.score - left.score);
   const content =
-    papers.length === 0
+    sortedPapers.length === 0
       ? `<tr><td style="background: #ffffff; border: 1px solid #d9ebff; border-radius: 18px; padding: 24px; color: #424245; font-size: 15px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;">No recommended papers today.</td></tr>`
-      : papers.map(renderPaper).join("\n");
+      : sortedPapers.map(renderPaper).join("\n");
 
   return `<!doctype html>
 <html lang="en">
