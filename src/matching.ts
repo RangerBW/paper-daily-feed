@@ -157,8 +157,39 @@ type ScoredPaper = RecommendedPaper & {
   clusterId: number;
 };
 
+type ClusterScore = {
+  cluster: InterestCluster;
+  score: number;
+};
+
+const MULTI_INTEREST_MAX_BONUS = 0.18;
+const MULTI_INTEREST_HALF_SATURATION = 1;
+
 function paperKey(paper: Pick<FeedPaper, "title" | "url">): string {
   return `${paper.url.trim().toLowerCase()}::${paper.title.trim().toLowerCase()}`;
+}
+
+function saturatedBonus(strength: number): number {
+  return MULTI_INTEREST_MAX_BONUS * (1 - Math.exp(-Math.max(0, strength) / MULTI_INTEREST_HALF_SATURATION));
+}
+
+function positiveMultiClusterScore(scores: ClusterScore[], minScore: number): ClusterScore | null {
+  const sortedScores = [...scores].sort((left, right) => right.score - left.score);
+  const best = sortedScores[0];
+  if (!best) {
+    return null;
+  }
+
+  const secondaryThreshold = Math.max(minScore, best.score * 0.6);
+  const secondaryStrength = sortedScores
+    .slice(1)
+    .filter((clusterScore) => clusterScore.score >= secondaryThreshold)
+    .reduce((total, clusterScore) => total + clusterScore.score - secondaryThreshold, 0);
+
+  return {
+    cluster: best.cluster,
+    score: best.score + saturatedBonus(secondaryStrength)
+  };
 }
 
 function selectHybridClusterDiverse(papers: ScoredPaper[], limit: number): RecommendedPaper[] {
@@ -229,32 +260,26 @@ export async function rankPapers(
 
   const scored = uniqueCandidates
     .map((candidate, candidateIndex) => {
-      let bestScore = Number.NEGATIVE_INFINITY;
-      let bestCluster: InterestCluster | undefined;
       const candidateEmbedding = candidateEmbeddings[candidateIndex] ?? [];
-
-      positiveClusters.forEach((cluster) => {
-        const score = cosineSimilarity(candidateEmbedding, cluster.centroid) * cluster.weight;
-        if (score > bestScore) {
-          bestScore = score;
-          bestCluster = cluster;
-        }
-      });
+      const positiveScores = positiveClusters.map((cluster) => ({
+        cluster,
+        score: cosineSimilarity(candidateEmbedding, cluster.centroid) * cluster.weight
+      }));
+      const bestPositive = positiveMultiClusterScore(positiveScores, config.minScore);
 
       const avoidPenalty = negativeClusters.reduce(
         (highest, cluster) => Math.max(highest, cosineSimilarity(candidateEmbedding, cluster.centroid)),
         0
       );
       const finalScore =
-        (bestScore === Number.NEGATIVE_INFINITY ? 0 : bestScore) -
-        config.avoidPenaltyWeight * Math.max(0, avoidPenalty);
-      const bestInterest = bestCluster ? bestInterestInCluster(candidateEmbedding, bestCluster) : undefined;
+        (bestPositive?.score ?? 0) - config.avoidPenaltyWeight * Math.max(0, avoidPenalty);
+      const bestInterest = bestPositive ? bestInterestInCluster(candidateEmbedding, bestPositive.cluster) : undefined;
 
       return {
         ...candidate,
         score: clampScore(finalScore),
         matchContext: toMatchContext(bestInterest),
-        clusterId: bestCluster?.id ?? -1
+        clusterId: bestPositive?.cluster.id ?? -1
       };
     })
     .sort((left, right) => right.score - left.score)

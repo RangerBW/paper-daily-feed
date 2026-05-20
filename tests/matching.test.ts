@@ -206,6 +206,38 @@ describe("rankPapers", () => {
     expect(ranked.map((paper) => paper.title)).toEqual(["Strong transport", "Climate paper", "Second transport"]);
   });
 
+  it("boosts papers that strongly match multiple positive interest clusters", async () => {
+    const ranked = await rankPapers(
+      { ...matchingConfig, minScore: 0.35, clusterSimilarityThreshold: 0.9 },
+      [
+        candidate("Single interest paper", "Transit equity only."),
+        candidate("Multi interest paper", "Transit equity and heat resilience."),
+        candidate("Weak broad paper", "Transit equity with weak climate overlap.")
+      ],
+      [
+        interest("Transport", "Transit access.", ["transport"]),
+        interest("Climate", "Heat resilience.", ["climate"])
+      ],
+      {},
+      async () => [
+        [0.8, 0.2, 0.565],
+        [0.8, 0.55, 0.24],
+        [0.8, 0.2, 0.565],
+        [1, 0, 0],
+        [0, 1, 0]
+      ]
+    );
+
+    expect(ranked.map((paper) => paper.title)).toEqual([
+      "Multi interest paper",
+      "Single interest paper",
+      "Weak broad paper"
+    ]);
+    expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
+    expect(ranked[0].score).toBeLessThan(0.95);
+    expect(ranked[1].score).toBeCloseTo(ranked[2].score, 2);
+  });
+
   it("penalizes papers that match negative interest atoms", async () => {
     const ranked = await rankPapers(
       { ...matchingConfig, minScore: 0, avoidPenaltyWeight: 0.5 },
