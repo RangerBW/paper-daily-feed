@@ -63,9 +63,10 @@ export function normalizeZoteroInterestDocument(item: ZoteroItem): InterestDocum
 
 function globToRegExp(pattern: string): RegExp {
   let source = "";
-  for (let index = 0; index < pattern.length; index += 1) {
-    const char = pattern[index];
-    const next = pattern[index + 1];
+  const normalizedPattern = normalizeCollectionPath(pattern);
+  for (let index = 0; index < normalizedPattern.length; index += 1) {
+    const char = normalizedPattern[index];
+    const next = normalizedPattern[index + 1];
     if (char === "*" && next === "*") {
       source += ".*";
       index += 1;
@@ -78,11 +79,15 @@ function globToRegExp(pattern: string): RegExp {
   return new RegExp(`^${source}$`);
 }
 
+function normalizeCollectionPath(path: string): string {
+  return path.trim().replace(/\/+$/g, "");
+}
+
 function matchesAnyPath(paths: string[], patterns: string[] | null): boolean {
   if (!patterns || patterns.length === 0) {
     return false;
   }
-  return paths.some((path) => patterns.some((pattern) => globToRegExp(pattern).test(path)));
+  return paths.some((path) => patterns.some((pattern) => globToRegExp(pattern).test(normalizeCollectionPath(path))));
 }
 
 export function filterCorpusByPath(

@@ -71,6 +71,20 @@ describe("normalizeZoteroItem", () => {
 
     expect(filtered.map((paper) => paper.title)).toEqual(["Keep"]);
   });
+
+  it("matches collection paths when the configured include path has a trailing slash", () => {
+    const corpus = [
+      {
+        title: "Keep",
+        abstract: "Urban mobility.",
+        paths: ["ResearchProposal/resilience"]
+      }
+    ];
+
+    const filtered = filterCorpusByPath(corpus, ["ResearchProposal/resilience/"], []);
+
+    expect(filtered.map((paper) => paper.title)).toEqual(["Keep"]);
+  });
 });
 
 describe("normalizeZoteroInterestDocument", () => {
