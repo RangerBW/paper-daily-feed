@@ -14,19 +14,7 @@
           <div style="width:392px;height:27px;border-radius:14px;background:#e8f4ff;color:#53677d;font-size:13px;font-weight:500;display:flex;align-items:center;padding:0 24px;box-sizing:border-box;">Search mail</div>
         </div>
 
-        <div style="height:606px;display:grid;grid-template-columns:188px 308px 1fr;">
-          <aside style="background:#f4f9ff;border-right:1px solid #dcecff;padding:88px 20px 0 22px;box-sizing:border-box;">
-            <div style="height:34px;border-radius:17px;background:#e8f4ff;color:#007aff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-sizing:border-box;">
-              <span>Inbox</span>
-              <span>12</span>
-            </div>
-            <div style="margin-top:28px;color:#6e6e73;font-size:14px;font-weight:500;line-height:44px;padding-left:36px;">
-              <div>Starred</div>
-              <div>Archive</div>
-              <div>Research</div>
-            </div>
-          </aside>
-
+        <div style="height:606px;display:grid;grid-template-columns:308px 1fr;">
           <section style="background:#fbfdff;border-right:1px solid #dcecff;padding:28px 19px;box-sizing:border-box;">
             <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:25px;line-height:1.12;margin:0 0 6px;font-weight:700;letter-spacing:0;">Inbox</h2>
             <p style="font-size:13px;line-height:1.4;color:#6e6e73;margin:0 0 26px;">12 unread messages</p>
@@ -42,19 +30,19 @@
             </article>
           </section>
 
-          <main style="background:#ffffff;padding:30px 42px;box-sizing:border-box;">
-            <header style="display:grid;grid-template-columns:1fr auto;align-items:start;column-gap:24px;margin-bottom:14px;">
+          <main style="background:#ffffff;padding:26px 42px;box-sizing:border-box;">
+            <header style="display:grid;grid-template-columns:1fr auto;align-items:start;column-gap:22px;margin-bottom:12px;">
               <div style="min-width:0;">
                 <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:26px;line-height:1.15;margin:0 0 7px;font-weight:650;letter-spacing:0;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Paper feed for 20th May 2026</h2>
                 <p style="margin:0;color:#6e6e73;font-size:13px;line-height:1.35;">From Daily Paper Feeds</p>
               </div>
               <time style="font-size:13px;color:#6e6e73;line-height:1.4;margin-top:5px;white-space:nowrap;">Today, 09:00</time>
             </header>
-            <div style="height:1px;background:#eef4fb;margin:14px 0 16px;"></div>
+            <div style="height:1px;background:#eef4fb;margin:12px 0 14px;"></div>
 
-            <div style="width:500px;height:430px;border-radius:20px;background:#e8f4ff;padding:25px 46px;box-sizing:border-box;overflow:hidden;">
-              <div style="width:600px;transform:scale(.68);transform-origin:top left;background:#e8f4ff;">
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;border-collapse:collapse;">
+            <div style="width:680px;height:438px;border-radius:20px;background:#e8f4ff;padding:22px 12px;box-sizing:border-box;overflow:hidden;">
+              <div style="width:800px;transform:scale(.82);transform-origin:top left;background:#e8f4ff;">
+                <table role="presentation" width="800" cellpadding="0" cellspacing="0" border="0" style="width:800px;border-collapse:collapse;">
                   <tr>
                     <td align="center" style="padding:10px 2px 26px 2px;text-align:center;">
                       <p style="margin:0 0 8px 0;color:#007aff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">Research Bulletin</p>
