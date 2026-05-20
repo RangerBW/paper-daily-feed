@@ -2,81 +2,79 @@
   <title id="title">Daily paper feeds email system preview</title>
   <desc id="desc">Email client UI showing a received Daily paper feeds recommendation email.</desc>
 
-  <foreignObject x="0" y="0" width="1200" height="760">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="width:1200px;height:760px;background:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;color:#1d1d1f;box-sizing:border-box;padding:46px 64px;">
-      <div style="width:1072px;height:668px;background:#ffffff;border:1px solid #c8e2ff;border-radius:28px;box-shadow:0 24px 56px rgba(0,87,184,0.16);overflow:hidden;box-sizing:border-box;">
-        <div style="height:62px;background:#f7fbff;border-bottom:1px solid #dcecff;display:flex;align-items:center;gap:28px;padding:0 32px;box-sizing:border-box;">
-          <div style="display:flex;gap:10px;flex:0 0 auto;">
-            <span style="width:14px;height:14px;border-radius:50%;background:#ff5f57;display:block;"></span>
-            <span style="width:14px;height:14px;border-radius:50%;background:#ffbd2e;display:block;"></span>
-            <span style="width:14px;height:14px;border-radius:50%;background:#28c840;display:block;"></span>
-          </div>
-          <div style="width:392px;height:27px;border-radius:14px;background:#e8f4ff;color:#53677d;font-size:13px;font-weight:500;display:flex;align-items:center;padding:0 24px;box-sizing:border-box;">Search mail</div>
-        </div>
+  <defs>
+    <filter id="windowShadow" x="0" y="0" width="1200" height="760" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#0057b8" flood-opacity="0.16"/>
+    </filter>
+    <filter id="cardShadow" x="0" y="0" width="760" height="420" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#007aff" flood-opacity="0.08"/>
+    </filter>
+    <linearGradient id="avatarGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#007aff"/>
+      <stop offset="1" stop-color="#4da3ff"/>
+    </linearGradient>
+    <clipPath id="inboxClip">
+      <rect x="78" y="234" width="268" height="104" rx="16"/>
+    </clipPath>
+    <clipPath id="messageClip">
+      <rect x="488" y="390" width="616" height="260" rx="18"/>
+    </clipPath>
+    <clipPath id="previewClip">
+      <rect x="420" y="246" width="680" height="438" rx="20"/>
+    </clipPath>
+  </defs>
 
-        <div style="height:606px;display:grid;grid-template-columns:308px 1fr;">
-          <section style="background:#fbfdff;border-right:1px solid #dcecff;padding:28px 19px;box-sizing:border-box;">
-            <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:25px;line-height:1.12;margin:0 0 6px;font-weight:700;letter-spacing:0;">Inbox</h2>
-            <p style="font-size:13px;line-height:1.4;color:#6e6e73;margin:0 0 26px;">12 unread messages</p>
+  <rect x="64" y="46" width="1072" height="668" rx="28" fill="#ffffff" stroke="#c8e2ff" filter="url(#windowShadow)"/>
+  <rect x="65" y="47" width="1070" height="60" rx="27" fill="#f7fbff"/>
+  <path d="M65 107H1135" stroke="#dcecff"/>
 
-            <article style="height:104px;border-radius:16px;background:#e8f4ff;border:1px solid #b9dcff;position:relative;padding:14px 18px 14px 60px;box-sizing:border-box;">
-              <div style="position:absolute;left:14px;top:14px;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#007aff,#4da3ff);color:white;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;">D</div>
-              <time style="position:absolute;right:18px;top:17px;font-size:12px;font-weight:600;color:#007aff;white-space:nowrap;">09:00</time>
-              <div style="min-width:0;padding-right:48px;">
-                <p style="font-size:14px;font-weight:600;line-height:1.28;margin:0 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Daily Paper Feeds</p>
-                <p style="font-size:13px;font-weight:600;line-height:1.28;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Paper feed for 20th May 2026</p>
-                <p style="font-size:12px;line-height:1.35;color:#5f6f83;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Daily paper recommendations selected for your research interests.</p>
-              </div>
-            </article>
-          </section>
+  <circle cx="102" cy="77" r="7" fill="#ff5f57"/>
+  <circle cx="126" cy="77" r="7" fill="#ffbd2e"/>
+  <circle cx="150" cy="77" r="7" fill="#28c840"/>
+  <rect x="188" y="63.5" width="392" height="27" rx="13.5" fill="#e8f4ff"/>
+  <text x="212" y="81" fill="#53677d" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="500">Search mail</text>
 
-          <main style="background:#ffffff;padding:26px 42px;box-sizing:border-box;">
-            <header style="display:grid;grid-template-columns:1fr auto;align-items:start;column-gap:22px;margin-bottom:12px;">
-              <div style="min-width:0;">
-                <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:26px;line-height:1.15;margin:0 0 7px;font-weight:650;letter-spacing:0;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Paper feed for 20th May 2026</h2>
-                <p style="margin:0;color:#6e6e73;font-size:13px;line-height:1.35;">From Daily Paper Feeds</p>
-              </div>
-              <time style="font-size:13px;color:#6e6e73;line-height:1.4;margin-top:5px;white-space:nowrap;">Today, 09:00</time>
-            </header>
-            <div style="height:1px;background:#eef4fb;margin:12px 0 14px;"></div>
+  <rect x="65" y="108" width="307" height="605" fill="#fbfdff"/>
+  <path d="M372 108V713" stroke="#dcecff"/>
+  <text x="83" y="167" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="25" font-weight="700">Inbox</text>
+  <text x="83" y="191" fill="#6e6e73" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13">12 unread messages</text>
 
-            <div style="width:680px;height:438px;border-radius:20px;background:#e8f4ff;padding:22px 12px;box-sizing:border-box;overflow:hidden;">
-              <div style="width:800px;transform:scale(.82);transform-origin:top left;background:#e8f4ff;">
-                <table role="presentation" width="800" cellpadding="0" cellspacing="0" border="0" style="width:800px;border-collapse:collapse;">
-                  <tr>
-                    <td align="center" style="padding:10px 2px 26px 2px;text-align:center;">
-                      <p style="margin:0 0 8px 0;color:#007aff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">Research Bulletin</p>
-                      <h1 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:36px;line-height:1.12;margin:0;color:#007aff;font-weight:700;letter-spacing:0;">Daily paper feeds</h1>
-                      <p style="margin:12px 0 0 0;color:#6e6e73;font-size:15px;line-height:1.55;">A recommendation of papers based on your research interests.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:0 0 18px 0;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;background:#ffffff;border:1px solid #d9ebff;border-radius:18px;box-shadow:0 8px 24px rgba(0,122,255,.08);">
-                        <tr>
-                          <td style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;color:#1d1d1f;">
-                            <p style="margin:0 0 8px 0;color:#007aff;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Travel Behaviour and Society · 2026-01-01</p>
-                            <h2 style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;font-size:24px;line-height:1.24;margin:0 0 12px 0;color:#1d1d1f;font-weight:700;letter-spacing:0;">Predicting short-term urban bike sharing demand in a coupled continuous and network space</h2>
-                            <p style="margin:0 0 8px 0;color:#424245;font-size:14px;line-height:1.45;">Shen Liang, Yang Xu, Guangyue Li, Xiaohu Zhang, Qiuping Li</p>
-                            <p style="display:inline-block;margin:0;padding:8px 13px;border-radius:999px;background:#007aff;color:#ffffff;font-size:13px;font-weight:700;">Recommendation score: 57.9%</p>
-                            <p style="margin:16px 0 0;color:#424245;font-size:14px;line-height:1.6;"><strong style="color:#1d1d1f;">TLDR:</strong> GeoTopo-Net jointly models dependencies in continuous and network spaces to improve short-term urban bike sharing demand prediction.</p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" style="padding:18px 2px 4px 2px;text-align:center;color:#6e6e73;font-size:13px;line-height:1.6;">
-                      <p style="margin:0;">Built with <span style="color:#007aff;font-weight:700;">paper-daily-feed</span> by <span style="color:#007aff;font-weight:700;">nehSgnaiL</span>.</p>
-                      <p style="margin:8px 0 0 0;"><span style="color:inherit;font-size:11px;text-decoration:underline;">Unsubscribe</span></p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    </div>
-  </foreignObject>
+  <rect x="83" y="234" width="268" height="104" rx="16" fill="#e8f4ff" stroke="#b9dcff"/>
+  <g clip-path="url(#inboxClip)">
+    <circle cx="116" cy="267" r="19" fill="url(#avatarGradient)"/>
+    <text x="116" y="273" fill="#ffffff" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="17" font-weight="700">D</text>
+    <text x="143" y="261" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="600">Daily Paper Feeds</text>
+    <text x="305" y="261" fill="#007aff" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="600">09:00</text>
+    <text x="143" y="286" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="600">Paper feed for 20th ...</text>
+    <text x="143" y="311" fill="#5f6f83" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12">Daily paper recommend...</text>
+  </g>
+
+  <rect x="373" y="108" width="762" height="605" fill="#ffffff"/>
+  <text x="420" y="166" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="650">Paper feed for 20th May 2026</text>
+  <text x="420" y="191" fill="#6e6e73" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13">From Daily Paper Feeds</text>
+  <text x="1058" y="175" fill="#6e6e73" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13">Today, 09:00</text>
+  <path d="M420 221H1093" stroke="#eef4fb"/>
+
+  <rect x="420" y="246" width="680" height="438" rx="20" fill="#e8f4ff"/>
+  <g clip-path="url(#previewClip)">
+    <text x="760" y="308" fill="#007aff" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="1.8">RESEARCH BULLETIN</text>
+    <text x="760" y="351" fill="#007aff" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="36" font-weight="700">Daily paper feeds</text>
+    <text x="760" y="384" fill="#6e6e73" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="15">A recommendation of papers based on your research interests.</text>
+
+    <rect x="488" y="414" width="616" height="260" rx="18" fill="#ffffff" stroke="#d9ebff" filter="url(#cardShadow)"/>
+    <g clip-path="url(#messageClip)">
+      <text x="512" y="452" fill="#007aff" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8">TRAVEL BEHAVIOUR AND SOCIETY · 2026-01-01</text>
+      <text x="512" y="494" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="700">Predicting short-term urban bike sharing demand in</text>
+      <text x="512" y="520" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="700">a coupled continuous and network space</text>
+      <text x="512" y="556" fill="#424245" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="12.5">Shen Liang, Yang Xu, Guangyue Li, Xiaohu Zhang, Qiuping Li</text>
+      <rect x="512" y="580" width="205" height="30" rx="15" fill="#007aff"/>
+      <text x="615" y="600" fill="#ffffff" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700">Recommendation score: 57.9%</text>
+      <text x="512" y="644" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11.5" font-weight="700">TLDR:</text>
+      <text x="553" y="644" fill="#424245" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11.5">GeoTopo-Net jointly models dependencies in continuous and network spaces to improve short-term</text>
+      <text x="512" y="665" fill="#424245" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11.5">urban bike sharing demand prediction.</text>
+    </g>
+
+    <text x="760" y="707" fill="#6e6e73" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="13">Built with <tspan fill="#007aff" font-weight="700">paper-daily-feed</tspan> by <tspan fill="#007aff" font-weight="700">nehSgnaiL</tspan>.</text>
+    <text x="760" y="730" fill="#6e6e73" text-anchor="middle" text-decoration="underline" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif" font-size="11">Unsubscribe</text>
+  </g>
 </svg>
