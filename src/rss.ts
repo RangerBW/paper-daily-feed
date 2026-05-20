@@ -126,8 +126,9 @@ function parseScienceDirectAuthors(item: ParserItem): string[] {
 
 function affiliationHeadPattern(): string {
   return (
-    "Department|School|College|Faculty|Freshwater|Institute|Ministry|State Key Laboratory|Key Laboratory|" +
-    "Laboratory|Centre|Center|University|Unit|Dipartimento|WorldPop"
+    "Academy|Administration|Agency|Asia Research|Business|Centre|Center|College|Department|Dipartimento|Division|" +
+    "Faculty|Freshwater|Group|Institute|Key Laboratory|Laboratory|Ministry|National|Program|Research Center|" +
+    "Research Centre|School|State Key Laboratory|Unit|University|WorldPop"
   );
 }
 
@@ -136,7 +137,9 @@ function findTaylorFrancisAffiliationStart(value: string): RegExpExecArray | nul
 }
 
 function findTaylorFrancisAffiliationEnd(value: string): number {
-  const nextAffiliation = new RegExp(`(?:\\s|(?<=[A-Z]))[b-z]\\s+(?=${affiliationHeadPattern()}\\b)`, "i").exec(value);
+  const nextAffiliation = new RegExp(`(?:\\s[b-z]|(?<=[A-Z])[b-z])\\s+(?=${affiliationHeadPattern()}\\b)`, "u").exec(
+    value
+  );
   const biography = /\s*[A-Z][A-Z.'’-]+(?:\s+[A-Z][A-Z.'’-]+){1,3}\s+is\s+(?:currently\s+)?(?:a|an|the)\s+/u.exec(
     value
   );
@@ -274,6 +277,23 @@ function normalizeFirstAffiliation(item: ParserItem): string | undefined {
   return firstAffiliation || parseTaylorFrancisFirstAffiliation(item);
 }
 
+function normalizeMetadataText(item: ParserItem): string | undefined {
+  const text = [
+    ...asStringArray(item.dcCreators),
+    ...asStringArray(item.authors),
+    ...asStringArray(item.creator),
+    ...asStringArray(item.author),
+    ...asStringArray(item.affiliations),
+    ...asStringArray(item.dcAffiliations),
+    ...asStringArray(item.prismAffiliations)
+  ]
+    .map(normalizeField)
+    .filter(Boolean)
+    .join(" ");
+
+  return text || undefined;
+}
+
 function normalizeDate(item: ParserItem): Date | null {
   if (isTaylorFrancisItem(item)) {
     const taylorFrancisDate = parseDateValue(item.prismCoverDate ?? item.prismPublicationDate);
@@ -332,6 +352,7 @@ export function normalizeFeedItem(journal: string, item: ParserItem): FeedPaper 
 
   const authors = normalizeAuthors(item);
   const firstAffiliation = normalizeFirstAffiliation(item);
+  const metadataText = normalizeMetadataText(item);
 
   return {
     journal,
@@ -340,7 +361,8 @@ export function normalizeFeedItem(journal: string, item: ParserItem): FeedPaper 
     url,
     publishedAt: normalizeDate(item),
     ...(authors ? { authors } : {}),
-    ...(firstAffiliation ? { firstAffiliation } : {})
+    ...(firstAffiliation ? { firstAffiliation } : {}),
+    ...(metadataText ? { metadataText } : {})
   };
 }
 

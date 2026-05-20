@@ -105,6 +105,34 @@ describe("normalizeFeedItem", () => {
     });
   });
 
+  it("removes Urban Geography Taylor affiliations that start with Asia Research metadata", () => {
+    const paper = normalizeFeedItem("Urban Geography", {
+      title: "Circulating referencescapes",
+      link: "https://www.tandfonline.com/doi/full/10.1080/example?af=R",
+      dcCreators: [
+        "Qian Hui, Tan Brenda, Saw Ai, Yeoh a Asia Research Institute, National University of Singapore, Singapore b Department of Geography, National University of Singapore, Singapore"
+      ]
+    });
+
+    expect(paper?.authors).toEqual(["Qian Hui", "Tan Brenda", "Saw Ai", "Yeoh"]);
+    expect(paper?.firstAffiliation).toBe("Asia Research Institute, National University of Singapore, Singapore");
+  });
+
+  it("ends Taylor first affiliation before Business school metadata", () => {
+    const paper = normalizeFeedItem("Urban Geography", {
+      title: "AI Urbanism",
+      link: "https://www.tandfonline.com/doi/full/10.1080/example?af=R",
+      dcCreators: [
+        "Jun Zhang Andrew Cox Jing Wang a School of Information, Journalism and Communication, University of Sheffield, Sheffield, UKb Business School, University of Sheffield, Sheffield, UK"
+      ]
+    });
+
+    expect(paper?.authors).toEqual(["Jun Zhang", "Andrew Cox", "Jing Wang"]);
+    expect(paper?.firstAffiliation).toBe(
+      "School of Information, Journalism and Communication, University of Sheffield, Sheffield, UK"
+    );
+  });
+
   it("drops Taylor & Francis bibliographic metadata descriptions", () => {
     const paper = normalizeFeedItem("Urban Geography", {
       title: "Taylor description only contains issue metadata",

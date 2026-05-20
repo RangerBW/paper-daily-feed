@@ -272,6 +272,11 @@ describe("loadAppConfig", () => {
         maxPaperAgeDays: 90,
         minScore: 0.35
       },
+      metadataRepair: {
+        enabled: false,
+        model: "onnx-community/bert-base-NER-ONNX",
+        timeoutMs: 300000
+      },
       summary: {
         enabled: false,
         baseUrl: "https://api.openai.com/v1",

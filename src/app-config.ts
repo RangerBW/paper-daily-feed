@@ -10,6 +10,7 @@ export type AppConfig = {
     customRss: CustomRssFeedConfig[];
   };
   matching: MatchingConfig;
+  metadataRepair: MetadataRepairConfig;
   summary: SummaryConfig;
   delivery: DeliveryConfig;
   runtime: {
@@ -81,6 +82,12 @@ export type DeliveryConfig = {
   smtpHost: string;
   smtpPort: number;
   smtpPassword: string;
+};
+
+export type MetadataRepairConfig = {
+  enabled: boolean;
+  model: string;
+  timeoutMs: number;
 };
 
 type Env = Record<string, string | undefined>;
@@ -360,6 +367,7 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
   const matching = asRecord(rawConfig.matching);
   const matchingApi = asRecord(matching.api);
   const matchingLocal = asRecord(matching.local);
+  const metadataRepair = asRecord(rawConfig.metadataRepair);
   const summary = asRecord(rawConfig.summary);
   const delivery = asRecord(rawConfig.delivery);
   const runtime = asRecord(rawConfig.runtime);
@@ -403,6 +411,11 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
       paperLimit: asNumber(configOrEnv(matching.paperLimit, env, "PAPER_LIMIT"), 10),
       maxPaperAgeDays: asNumber(matching.maxPaperAgeDays, 90),
       minScore: asNumberInRange(matching.minScore, 0.35, "matching.minScore", 0, 1)
+    },
+    metadataRepair: {
+      enabled: asBoolean(metadataRepair.enabled, false),
+      model: asString(metadataRepair.model, "onnx-community/bert-base-NER-ONNX"),
+      timeoutMs: asNumber(metadataRepair.timeoutMs, 300000)
     },
     summary: {
       enabled: asBoolean(summary.enabled, false),

@@ -101,6 +101,17 @@
     // Can skip. Only consider feed papers this many days old. Empty/omitted defaults to 90.
     "maxPaperAgeDays": 90
   },
+  "metadataRepair": {
+    // Can skip the whole metadataRepair section. Disabled by default.
+    // true: run a local ONNX NER model on the selected recommendations only.
+    // false or empty: keep RSS parser metadata as-is.
+    "enabled": true,
+    // Can skip. Transformers.js token-classification model. Empty/omitted defaults to onnx-community/bert-base-NER-ONNX.
+    "model": "onnx-community/bert-base-NER-ONNX",
+    // Can skip. Total repair budget for model load plus all selected recommendations, in milliseconds.
+    // On failure or timeout, existing parsed authors/affiliation are kept.
+    "timeoutMs": 300000
+  },
   "summary": {
     // Can skip the whole summary section. Summaries are disabled by default.
     // true: call an OpenAI-compatible chat API for one-sentence TLDRs.

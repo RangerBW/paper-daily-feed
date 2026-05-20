@@ -11,6 +11,9 @@ const feedMock = vi.hoisted(() => ({
 const matchingMock = vi.hoisted(() => ({
   rankPapers: vi.fn()
 }));
+const metadataRepairMock = vi.hoisted(() => ({
+  repairRecommendationMetadata: vi.fn()
+}));
 const emailMock = vi.hoisted(() => ({
   sendEmail: vi.fn()
 }));
@@ -25,6 +28,7 @@ const historyMock = vi.hoisted(() => ({
 vi.mock("../src/interest-corpus.js", () => corpusMock);
 vi.mock("../src/feed-ingestion.js", () => feedMock);
 vi.mock("../src/matching.js", () => matchingMock);
+vi.mock("../src/metadata-repair.js", () => metadataRepairMock);
 vi.mock("../src/email.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../src/email.js")>();
   return {
@@ -76,6 +80,11 @@ function config(overrides: Partial<AppConfig> = {}): AppConfig {
       paperLimit: 10,
       maxPaperAgeDays: 90,
       minScore: 0.35
+    },
+    metadataRepair: {
+      enabled: false,
+      model: "onnx-community/bert-base-NER-ONNX",
+      timeoutMs: 300000
     },
     summary: {
       enabled: false,
@@ -138,6 +147,7 @@ describe("runDailyFeed delivery history", () => {
     corpusMock.buildInterestCorpus.mockResolvedValue([interest]);
     feedMock.fetchRecentFeedPapers.mockResolvedValue([paper("Delivered"), paper("Fresh")]);
     matchingMock.rankPapers.mockResolvedValue([recommended("Fresh")]);
+    metadataRepairMock.repairRecommendationMetadata.mockImplementation(async (recommendations) => recommendations);
     emailMock.sendEmail.mockResolvedValue({ messageId: "message-id" });
   });
 
@@ -151,6 +161,10 @@ describe("runDailyFeed delivery history", () => {
       {}
     );
     expect(matchingMock.rankPapers).toHaveBeenCalledWith(config().matching, [paper("Fresh")], [interest], {});
+    expect(metadataRepairMock.repairRecommendationMetadata).toHaveBeenCalledWith(
+      [recommended("Fresh")],
+      config().metadataRepair
+    );
     expect(emailMock.sendEmail).toHaveBeenCalledWith(
       config().delivery,
       expect.any(String),

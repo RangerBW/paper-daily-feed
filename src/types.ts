@@ -18,6 +18,7 @@ export type FeedPaper = {
   publishedAt: Date | null;
   authors?: string[];
   firstAffiliation?: string;
+  metadataText?: string;
 };
 
 export type InterestDocument = {

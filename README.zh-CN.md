@@ -24,11 +24,13 @@
 **智能每日论文推送**，可根据你的研究兴趣或 Zotero 文库个性化筛选。最新、最相关的论文会直接发送到你的邮箱。全流程云端运行，**免费**、**无需本地安装**，配置很快。
 
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/email_render_example-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="./docs/email_render_example.svg" />
-    <img alt="paper-daily-feed" src="./docs/email_render_example.svg" width="650"/>
-  </picture>
+  <a href="https://doi.org/10.1016/j.tbs.2025.101152" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./docs/email_render_example-dark.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="./docs/email_render_example.svg" />
+      <img alt="paper-daily-feed" src="./docs/email_render_example.svg" width="650"/>
+    </picture>
+  </a>
 </div>
 <div align="center">
 <i>每日论文推送预览。</i>

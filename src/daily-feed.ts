@@ -12,6 +12,7 @@ import {
 import { sendEmail } from "./email.js";
 import { buildInterestCorpus } from "./interest-corpus.js";
 import { rankPapers } from "./matching.js";
+import { repairRecommendationMetadata } from "./metadata-repair.js";
 import { renderRecommendationEmail, summarizeRecommendations } from "./recommendation-delivery.js";
 import { fetchRecentFeedPapers } from "./feed-ingestion.js";
 
@@ -95,6 +96,7 @@ export async function runDailyFeed(
   console.log(`Ranking ${eligiblePapers.length} papers against ${interestCorpus.length} interest documents with ${matchingProvider(config)}...`);
   let recommendations = await rankPapers(config.matching, eligiblePapers, interestCorpus, env);
   console.log(`Ranked ${recommendations.length} recommended papers.`);
+  recommendations = await repairRecommendationMetadata(recommendations, config.metadataRepair);
 
   if (recommendations.length === 0 && !config.runtime.sendEmpty && mode === "run") {
     console.log("No recommended papers above threshold. Skipping email.");

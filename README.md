@@ -24,11 +24,13 @@
 **Smart daily feeds** tailored to your research interests or Zotero library. Get the latest, most relevant papers **delivered straight to your inbox**. 100% cloud-based, **free**, **no installs**, and quick to set up.
 
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/email_render_example-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="./docs/email_render_example.svg" />
-    <img alt="paper-daily-feed" src="./docs/email_render_example.svg" width="650"/>
-  </picture>
+  <a href="https://doi.org/10.1016/j.tbs.2025.101152" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./docs/email_render_example-dark.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="./docs/email_render_example.svg" />
+      <img alt="paper-daily-feed" src="./docs/email_render_example.svg" width="650"/>
+    </picture>
+  </a>
 </div>
 <div align="center">
 <i>Preview for daily feeds.</i>
