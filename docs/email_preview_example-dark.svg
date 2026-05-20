@@ -1,4 +1,4 @@
-<svg width="1200" height="760" viewBox="0 0 1200 760" style="max-width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<svg width="1120" height="704" viewBox="40 32 1120 704" style="max-width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Daily paper feeds dark email system preview</title>
   <desc id="desc">Dark email client UI showing a received Daily paper feeds recommendation email.</desc>
   <defs>
@@ -14,7 +14,7 @@
     </style>
   </defs>
 
-  <rect width="1200" height="760" fill="#0f172a"/>
+  <rect width="1200" height="760" fill="#0d1117"/>
 
   <g class="ui" filter="url(#window-shadow)">
     <rect x="64" y="47" width="1072" height="666" rx="24" fill="#0d1117" stroke="#30363d"/>
