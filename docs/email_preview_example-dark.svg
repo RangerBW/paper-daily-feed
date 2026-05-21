@@ -3,66 +3,65 @@
   <desc id="desc">Dark email client UI showing a received Daily paper feeds recommendation email.</desc>
   <defs>
     <filter id="window-shadow" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#020617" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#020617" flood-opacity="0.58"/>
     </filter>
     <filter id="card-shadow" x="-8%" y="-12%" width="116%" height="124%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#007aff" flood-opacity="0.14"/>
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#007aff" flood-opacity="0.16"/>
     </filter>
     <style>
-      .ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; }
-      .small-caps { font-size: 10px; font-weight: 700; letter-spacing: 2.4px; text-transform: uppercase; }
+      .ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; font-kerning: normal; }
     </style>
   </defs>
 
   <rect width="1200" height="760" fill="#0d1117"/>
 
   <g class="ui" filter="url(#window-shadow)">
-    <rect x="64" y="47" width="1072" height="666" rx="24" fill="#0d1117" stroke="#30363d"/>
-    <path d="M88 47h1024a24 24 0 0 1 24 24v37H64V71a24 24 0 0 1 24-24Z" fill="#101826" stroke="#30363d"/>
+    <rect x="64" y="47" width="1072" height="666" rx="22" fill="#0d1117" stroke="#30363d"/>
+    <path d="M86 47h1028a22 22 0 0 1 22 22v39H64V69a22 22 0 0 1 22-22Z" fill="#101826" stroke="#30363d"/>
 
     <circle cx="104" cy="78" r="7" fill="#ff5f56"/>
     <circle cx="128" cy="78" r="7" fill="#ffbd2e"/>
     <circle cx="152" cy="78" r="7" fill="#27c93f"/>
-    <rect x="187" y="64" width="392" height="27" rx="14" fill="#172335"/>
+    <rect x="187" y="63" width="392" height="29" rx="15" fill="#172335"/>
     <text x="211" y="82" fill="#a5c1e9" font-size="13">Search</text>
 
     <line x1="373" y1="108" x2="373" y2="713" stroke="#30363d"/>
 
-    <text x="84" y="159" fill="#f0f6fc" font-size="25" font-weight="800">Inbox</text>
+    <text x="84" y="159" fill="#f0f6fc" font-size="25" font-weight="700">Inbox</text>
     <text x="84" y="184" fill="#8bb9f5" font-size="14">12 unread emails</text>
 
-    <rect x="84" y="216" width="269" height="103" rx="16" fill="#132338" stroke="#1f6feb"/>
-    <circle cx="118" cy="250" r="19" fill="#2388ff"/>
-    <text x="118" y="257" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="800">D</text>
-    <text x="144" y="246" fill="#ffffff" font-size="14" font-weight="800">Daily Paper Feeds</text>
-    <text x="304" y="246" fill="#3b9cff" font-size="12" font-weight="700">09:00</text>
-    <text x="144" y="269" fill="#ffffff" font-size="13" font-weight="700">Paper feed for 20th M...</text>
-    <text x="144" y="293" fill="#a5c1e9" font-size="12">Daily paper recommend...</text>
+    <rect x="84" y="216" width="269" height="103" rx="14" fill="#132338" stroke="#1f6feb"/>
+    <circle cx="118" cy="250" r="19" fill="#007aff"/>
+    <text x="118" y="257" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="700">D</text>
+    <text x="144" y="246" fill="#ffffff" font-size="14" font-weight="700">Daily Paper Feeds</text>
+    <text x="304" y="246" fill="#3b9cff" font-size="12" font-weight="600">09:00</text>
+    <text x="144" y="269" fill="#ffffff" font-size="13" font-weight="600">Paper feed for 20 May</text>
+    <text x="144" y="293" fill="#a5c1e9" font-size="12">Daily paper recommendations</text>
 
-    <text x="416" y="159" fill="#f0f6fc" font-size="26" font-weight="800">Paper feed for 20th May 2026</text>
+    <text x="416" y="159" fill="#f0f6fc" font-size="26" font-weight="700">Paper feed for 20 May 2026</text>
     <text x="1095" y="153" text-anchor="end" fill="#a5c1e9" font-size="13">Today, 09:00</text>
     <text x="416" y="187" fill="#a5c1e9" font-size="14">From Daily Paper Feeds</text>
     <line x1="416" y1="203" x2="1095" y2="203" stroke="#30363d"/>
 
     <g filter="url(#card-shadow)">
-      <rect x="416" y="218" width="679" height="438" rx="20" fill="#101b2b"/>
-      <text x="755" y="258" text-anchor="middle" fill="#3b9cff" class="small-caps">Research bulletin</text>
-      <text x="755" y="292" text-anchor="middle" fill="#4da3ff" font-size="29" font-weight="800">Daily paper feeds</text>
-      <text x="755" y="321" text-anchor="middle" fill="#f0f6fc" font-size="13">A recommendation of papers based on your research interests</text>
+      <rect x="416" y="218" width="679" height="462" rx="18" fill="#101b2b"/>
+      <text x="755" y="253" text-anchor="middle" fill="#3b9cff" font-size="12" font-weight="700" letter-spacing="1.7">Research Bulletin</text>
+      <text x="755" y="290" text-anchor="middle" fill="#4da3ff" font-size="34" font-weight="700">Daily paper feeds</text>
+      <text x="755" y="320" text-anchor="middle" fill="#f0f6fc" font-size="14">A recommendation of papers based on your research interests.</text>
 
-      <rect x="447" y="348" width="620" height="215" rx="14" fill="#161b22" stroke="#1f6feb"/>
-      <text x="471" y="379" fill="#3b9cff" class="small-caps">Travel Behaviour and Society &#183; 2026-01-01</text>
-      <text x="471" y="405" fill="#f0f6fc" font-size="18" font-weight="800">Predicting short-term urban bike sharing demand in a coupled</text>
-      <text x="471" y="427" fill="#f0f6fc" font-size="18" font-weight="800">continuous and network space</text>
-      <text x="471" y="456" fill="#c9d1d9" font-size="12" font-weight="600">Shen Liang, Yang Xu, Guangyue Li, Xiaohu Zhang, Qiuping Li</text>
-      <rect x="471" y="465" width="177" height="27" rx="14" fill="#007aff"/>
-      <text x="560" y="482" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="800">Recommendation score: 57.9%</text>
-      <text x="471" y="518" fill="#ffffff" font-size="12" font-weight="800">TLDR:</text>
-      <text x="514" y="518" fill="#f0f6fc" font-size="12" font-weight="600">GeoTopo-Net jointly models dependencies in continuous and network spaces</text>
-      <text x="471" y="536" fill="#f0f6fc" font-size="12" font-weight="600">to improve short-term urban bike sharing demand prediction.</text>
+      <rect x="456" y="340" width="600" height="246" rx="18" fill="#161b22" stroke="#1f6feb"/>
+      <text x="480" y="372" fill="#3b9cff" font-size="12" font-weight="700" letter-spacing="1.1">Travel Behaviour and Society &#183; 2026-01-01</text>
+      <text x="480" y="405" fill="#f0f6fc" font-size="22" font-weight="700">Predicting short-term urban bike sharing demand</text>
+      <text x="480" y="433" fill="#f0f6fc" font-size="22" font-weight="700">in a coupled continuous and network space</text>
+      <text x="480" y="464" fill="#c9d1d9" font-size="14">Shen Liang, Yang Xu, Guangyue Li, Xiaohu Zhang, Qiuping Li</text>
+      <rect x="480" y="481" width="204" height="29" rx="15" fill="#007aff"/>
+      <text x="582" y="500" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">Recommendation score: 57.9%</text>
+      <text x="480" y="542" fill="#ffffff" font-size="14" font-weight="700">TLDR:</text>
+      <text x="526" y="542" fill="#c9d1d9" font-size="14">This study proposes GeoTopo-Net, a framework that jointly models</text>
+      <text x="480" y="564" fill="#c9d1d9" font-size="14">dependencies in continuous and network spaces to improve demand prediction.</text>
 
-      <text x="755" y="604" text-anchor="middle" fill="#c9d1d9" font-size="11">Built with <tspan fill="#3b9cff">paper-daily-feed</tspan> by <tspan fill="#3b9cff">nehSgnaiL</tspan>.</text>
-      <text x="755" y="627" text-anchor="middle" fill="#c9d1d9" font-size="9" text-decoration="underline">Unsubscribe</text>
+      <text x="755" y="623" text-anchor="middle" fill="#c9d1d9" font-size="13">Built with <tspan fill="#3b9cff" font-weight="700">paper-daily-feed</tspan> by <tspan fill="#3b9cff" font-weight="700">nehSgnaiL</tspan>.</text>
+      <text x="755" y="646" text-anchor="middle" fill="#c9d1d9" font-size="11" text-decoration="underline">Unsubscribe</text>
     </g>
   </g>
 </svg>
