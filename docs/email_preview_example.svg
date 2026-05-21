@@ -2,11 +2,12 @@
   <title id="title">Daily paper feeds email system preview</title>
   <desc id="desc">Email client UI showing a received Daily paper feeds recommendation email.</desc>
   <defs>
-    <filter id="window-shadow" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#1d1d1f" flood-opacity="0.16"/>
+    <filter id="window-shadow" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1d1d1f" flood-opacity="0.08"/>
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#1d1d1f" flood-opacity="0.10"/>
     </filter>
-    <filter id="card-shadow" x="-8%" y="-12%" width="116%" height="124%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#1d1d1f" flood-opacity="0.08"/>
+    <filter id="card-shadow" x="-5%" y="-8%" width="110%" height="116%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1d1d1f" flood-opacity="0.06"/>
     </filter>
     <style>
       .ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; font-kerning: normal; }
