@@ -83,6 +83,14 @@ jobs:
             sync_paths=(. ':(exclude).github/workflows/**')
           fi
 
+          write_workflow_sync_steps() {
+            echo "To also sync workflow files:"
+            echo "1. Open https://github.com/settings/personal-access-tokens/new"
+            echo "2. Create a fine-grained token scoped to this fork with Contents and Workflows read/write."
+            echo "3. Open https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new"
+            echo "4. Save the token as an Actions secret named MAINTENANCE_SYNC_TOKEN."
+          }
+
           if git diff --quiet HEAD upstream/main -- "${sync_paths[@]}"; then
             {
               echo "### Auto-sync checked"
@@ -95,12 +103,13 @@ jobs:
               if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ] && ! git diff --quiet HEAD upstream/main -- .github/workflows; then
                 echo
                 echo "Workflow file updates exist upstream but were not applied automatically because GitHub blocks workflow-file pushes from this workflow token."
-                echo "To enable automatic workflow-file updates, add a \`MAINTENANCE_SYNC_TOKEN\` secret with workflow-file permission."
+                echo
+                write_workflow_sync_steps
               fi
             } >> "$GITHUB_STEP_SUMMARY"
 
             if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ] && ! git diff --quiet HEAD upstream/main -- .github/workflows; then
-              echo "::warning title=Workflow updates skipped::Sync workflow files manually from upstream."
+              echo "::warning title=Workflow updates skipped::Open https://github.com/settings/personal-access-tokens/new to create the token, then add it at https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new as MAINTENANCE_SYNC_TOKEN."
             fi
 
             exit 0
@@ -131,10 +140,11 @@ jobs:
               echo "### Workflow updates skipped"
               echo
               echo "Workflow file updates from \`${UPSTREAM_REPOSITORY}:main\` were not applied automatically because GitHub blocks workflow-file pushes from this workflow token."
-              echo "To enable automatic workflow-file updates, add a \`MAINTENANCE_SYNC_TOKEN\` secret with workflow-file permission."
+              echo
+              write_workflow_sync_steps
             } >> "$GITHUB_STEP_SUMMARY"
 
-            echo "::warning title=Workflow updates skipped::Sync workflow files manually from upstream."
+            echo "::warning title=Workflow updates skipped::Open https://github.com/settings/personal-access-tokens/new to create the token, then add it at https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new as MAINTENANCE_SYNC_TOKEN."
           fi
 
           if git diff --cached --quiet; then
@@ -164,6 +174,8 @@ jobs:
             if [ "${CAN_SYNC_WORKFLOW_FILES}" = "true" ]; then
               echo "Workflow files were included because \`MAINTENANCE_SYNC_TOKEN\` is configured."
             else
-              echo "Workflow files are preserved from the fork. Add a \`MAINTENANCE_SYNC_TOKEN\` secret with workflow-file permission to sync them automatically."
+              echo "Workflow files are preserved from the fork."
+              echo
+              write_workflow_sync_steps
             fi
           } >> "$GITHUB_STEP_SUMMARY"
