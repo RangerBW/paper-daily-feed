@@ -156,15 +156,21 @@ Any issues, questions, or experience could be shared via [raising issue](https:/
 
 <h2 id="customization">Customization</h2>
 
-> [!TIP]
-> - **More customization:** Check out the full template in [`config/app.example.jsonc`](./config/app.example.jsonc) to see all the extra parameters you can add.
-> - **Stop or pause emails:** To stop receiving emails, simply disable the [**Daily paper feeds**](../../actions/workflows/daily.yml) workflow in the Actions tab. You can re-enable it anytime to start again.
-> - **Changing the daily email time:** By default, emails are sent at 06:11 UTC+8 (22:11 UTC). To change this, edit the `cron: '11 22 * * *'` line in [`.github/workflows/daily.yml`](./.github/workflows/daily.yml) using the ✏️ [**pencil icon**](../../edit/main/.github/workflows/daily.yml). (Use [crontab.guru](https://crontab.guru/) to easily generate the correct `cron` time format!)
+<details close>
+  <summary>Customization notes</summary>
 
+> [!TIP]
+> - **More options:** See [`config/app.example.jsonc`](./config/app.example.jsonc) for the full configuration template.
+>
+> - **Auto-updates:** The [maintenance workflow](../../actions/workflows/maintenance.yml) keeps feeds active and fetches updates weekly.
+> To also sync workflow files, create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork with **Contents** and **Workflows** read/write, then save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN`.
 
 > [!NOTE]
-> * **Protect your data:** Always keep passwords and API keys in **Secrets** (from [Step 2](#2-create-secrets)), never directly in your `APP_CONFIG`.
-> * **Staying active & updated:** The [maintenance workflow](../../actions/workflows/maintenance.yml) will run weekly to keep your daily emails active and to fetch the latest features and bug fixes.
+> - **Protect secrets:** Keep passwords and API keys in **Secrets** (from [Step 2](#2-create-secrets)), never directly in `APP_CONFIG`.
+> - **Pause emails:** Disable the [**Daily paper feeds**](../../actions/workflows/daily.yml) workflow in Actions. Re-enable it anytime.
+> - **Change send time:** Edit `cron: '11 22 * * *'` in [`.github/workflows/daily.yml`](./.github/workflows/daily.yml). Use [crontab.guru](https://crontab.guru/) if needed.
+
+</details>
 
 <h2>Local Run</h2>
 
