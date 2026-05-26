@@ -156,20 +156,20 @@ Any issues, questions, or experience could be shared via [raising issue](https:/
 
 <h2 id="customization">Customization</h2>
 
+> [!TIP]
+> - **More options:**
+> See [`config/app.example.jsonc`](./config/app.example.jsonc) for the full configuration template.
+>
+> - **Auto-updates:**
+> The [maintenance workflow](../../actions/workflows/maintenance.yml) keeps feeds active and fetches updates weekly.
+> To also sync workflow files, create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork with **Contents** and **Workflows** read/write, then save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN`.
+
 <details close>
   <summary>Customization notes</summary>
 
-  > [!TIP]
-  > - **More options:** See [`config/app.example.jsonc`](./config/app.example.jsonc) for the full configuration template.
-  >
-  > - **Auto-updates:** The [maintenance workflow](../../actions/workflows/maintenance.yml) keeps feeds active and fetches updates weekly.
-  > To also sync workflow files, create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork with **Contents** and **Workflows** read/write, then save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN`.
-
-
-  > [!NOTE]
-  > - **Protect secrets:** Keep passwords and API keys in **Secrets** (from [Step 2](#2-create-secrets)), never directly in `APP_CONFIG`.
-  > - **Pause emails:** Disable the [**Daily paper feeds**](../../actions/workflows/daily.yml) workflow in Actions. Re-enable it anytime.
-  > - **Change send time:** Edit `cron: '11 22 * * *'` in [`.github/workflows/daily.yml`](./.github/workflows/daily.yml). Use [crontab.guru](https://crontab.guru/) if needed.
+- **Protect secrets:** Keep passwords and API keys in **Secrets** (from [Step 2](#2-create-secrets)), never directly in `APP_CONFIG`.
+- **Pause emails:** Disable the [**Daily paper feeds**](../../actions/workflows/daily.yml) workflow in Actions. Re-enable it anytime.
+- **Change send time:** Edit `cron: '11 22 * * *'` in [`.github/workflows/daily.yml`](./.github/workflows/daily.yml). Use [crontab.guru](https://crontab.guru/) if needed.
 
 </details>
 

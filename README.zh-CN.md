@@ -157,20 +157,20 @@ GitHub 默认暂停 fork 仓库中的工作流。启用它们：
 
 <h2 id="customization">自定义</h2>
 
+> [!TIP]
+> - **更多选项：**
+> 查看完整模板 [`config/app.example.jsonc`](./config/app.example.jsonc)。
+>
+> - **自动更新：**
+> [maintenance workflow](../../actions/workflows/maintenance.yml) 会每周保持推送可用并拉取更新。
+> 若也想同步工作流文件，请创建仅限你的 fork 的 [fine-grained token](https://github.com/settings/personal-access-tokens)，授予 **Contents** 和 **Workflows** 读写权限，再保存为 Actions secret：`MAINTENANCE_SYNC_TOKEN`。
+
 <details close>
   <summary>自定义说明</summary>
 
-  > [!TIP]
-  > - **更多选项：** 查看完整模板 [`config/app.example.jsonc`](./config/app.example.jsonc)。
-  >
-  > - **自动更新：** [maintenance workflow](../../actions/workflows/maintenance.yml) 会每周保持推送可用并拉取更新。
-  > 若也想同步工作流文件，请创建仅限你的 fork 的 [fine-grained token](https://github.com/settings/personal-access-tokens)，授予 **Contents** 和 **Workflows** 读写权限，再保存为 Actions secret：`MAINTENANCE_SYNC_TOKEN`。
-
-
-  > [!NOTE]
-  > - **保护密钥：** 始终把密码和 API key 放在 [第 2 步](#2-创建-secrets) 的 **Secrets** 中，不要直接写进 `APP_CONFIG`。
-  > - **暂停邮件：** 在 Actions 页面禁用 [**Daily paper feeds**](../../actions/workflows/daily.yml) 工作流即可，之后可随时重新启用。
-  > - **修改发送时间：** 编辑 [`.github/workflows/daily.yml`](./.github/workflows/daily.yml) 中的 `cron: '11 22 * * *'`。需要时可用 [crontab.guru](https://crontab.guru/) 生成。
+- **保护密钥：** 始终把密码和 API key 放在 [第 2 步](#2-创建-secrets) 的 **Secrets** 中，不要直接写进 `APP_CONFIG`。
+- **暂停邮件：** 在 Actions 页面禁用 [**Daily paper feeds**](../../actions/workflows/daily.yml) 工作流即可，之后可随时重新启用。
+- **修改发送时间：** 编辑 [`.github/workflows/daily.yml`](./.github/workflows/daily.yml) 中的 `cron: '11 22 * * *'`。需要时可用 [crontab.guru](https://crontab.guru/) 生成。
 
 </details>
 
