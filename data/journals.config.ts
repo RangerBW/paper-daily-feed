@@ -120,6 +120,11 @@ const journals: Journal[] = [
     rss: "https://rss.sciencedirect.com/publication/science/0968090X",
   },
   {
+    name: "Transportation Research Part A: Policy and Practice",
+    abbr: "TR_A",
+    rss: "https://rss.sciencedirect.com/publication/science/09658564"
+  },
+  {
     name: "IEEE Transactions on Intelligent Transportation Systems",
     abbr: "IEEE T-ITS",
     rss: "https://ieeexplore.ieee.org/rss/TOC6979.XML"
