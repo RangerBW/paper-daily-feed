@@ -17,3 +17,5 @@ AGENTS.md
 !.env.example
 config/app.json
 config/app.jsonc
+
+docs/*.html
