@@ -56,12 +56,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
       - name: Sync fork from upstream
         env:
           SYNC_TOKEN: ${{ secrets.MAINTENANCE_SYNC_TOKEN || github.token }}
@@ -76,106 +70,156 @@ jobs:
           git fetch --no-tags origin main
           git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
           git fetch --no-tags upstream main
-          git switch -C main origin/main
-
-          sync_paths=(.)
-          if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ]; then
-            sync_paths=(. ':(exclude).github/workflows/**')
-          fi
 
           write_workflow_sync_steps() {
-            echo "To also sync workflow files:"
-            echo "1. Open https://github.com/settings/personal-access-tokens/new"
-            echo "2. Create a fine-grained token scoped to this fork with Contents and Workflows read/write."
-            echo "3. Open https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new"
-            echo "4. Save the token as an Actions secret named MAINTENANCE_SYNC_TOKEN."
+            echo "### What to do next"
+            echo
+            echo "This needs a one-time GitHub setup because GitHub does not let the default workflow token update workflow files."
+            echo
+            echo "1. Open this token page: https://github.com/settings/personal-access-tokens/new"
+            echo "2. Choose this fork as the only repository: \`${GITHUB_REPOSITORY}\`."
+            echo "3. Give the token these repository permissions: **Contents: Read and write** and **Workflows: Read and write**."
+            echo "4. Create the token and copy it."
+            echo "5. Open this secret page: https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new"
+            echo "6. Set **Name** to \`MAINTENANCE_SYNC_TOKEN\`."
+            echo "7. Paste the token into **Secret**, then save."
+            echo "8. Open this workflow page: https://github.com/${GITHUB_REPOSITORY}/actions/workflows/maintenance.yml"
+            echo "9. Click **Run workflow**."
+            echo
+            echo "Expected result: the next run says **Auto-sync completed** and your fork \`main\` has no extra sync commit."
           }
 
-          if git diff --quiet HEAD upstream/main -- "${sync_paths[@]}"; then
+          origin_main_sha="$(git rev-parse origin/main)"
+          upstream_main_sha="$(git rev-parse upstream/main)"
+          merge_base_sha="$(git merge-base origin/main upstream/main)"
+          upstream_workflow_file_changes="$(git log --format= --name-only origin/main..upstream/main -- .github/workflows | sed '/^$/d' | sort -u)"
+          fork_workflow_file_changes="$(git log --format= --name-only upstream/main..origin/main -- .github/workflows | sed '/^$/d' | sort -u)"
+
+          if [ "${origin_main_sha}" = "${upstream_main_sha}" ]; then
             {
               echo "### Auto-sync checked"
               echo
-              if [ "${CAN_SYNC_WORKFLOW_FILES}" = "true" ]; then
-                echo "The fork main branch already contains \`${UPSTREAM_REPOSITORY}:main\`."
-              else
-                echo "The fork main branch already contains the non-workflow files from \`${UPSTREAM_REPOSITORY}:main\`."
-              fi
-              if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ] && ! git diff --quiet HEAD upstream/main -- .github/workflows; then
-                echo
-                echo "Workflow file updates exist upstream but were not applied automatically because GitHub blocks workflow-file pushes from this workflow token."
-                echo
-                write_workflow_sync_steps
-              fi
+              echo "The fork main branch already points at \`${UPSTREAM_REPOSITORY}:main\`."
             } >> "$GITHUB_STEP_SUMMARY"
-
-            if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ] && ! git diff --quiet HEAD upstream/main -- .github/workflows; then
-              echo "::warning title=Workflow updates skipped::Open https://github.com/settings/personal-access-tokens/new to create the token, then add it at https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new as MAINTENANCE_SYNC_TOKEN."
-            fi
 
             exit 0
           fi
 
-          if ! git merge --squash upstream/main; then
-            git restore --source=HEAD --staged --worktree .github/workflows || true
+          if git merge-base --is-ancestor upstream/main origin/main; then
+            {
+              echo "### Auto-sync checked"
+              echo
+              echo "The fork main branch already contains \`${UPSTREAM_REPOSITORY}:main\`."
+              echo "Your fork also has custom commits after upstream. No sync commit was created."
+            } >> "$GITHUB_STEP_SUMMARY"
 
-            if git diff --name-only --diff-filter=U | grep -q .; then
-              git merge --abort || true
-              {
-                echo "### Auto-sync skipped"
-                echo
-                echo "The fork main branch and \`${UPSTREAM_REPOSITORY}:main\` both changed, and Git could not merge them automatically."
-                echo "No updates were pushed to \`main\`."
-                echo
-                echo "Resolve the conflicts manually, then rerun this workflow."
-              } >> "$GITHUB_STEP_SUMMARY"
-
-              echo "::warning title=Auto-sync skipped::Upstream changes could not be merged automatically."
-              exit 0
-            fi
+            exit 0
           fi
 
-          if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ] && ! git diff --quiet --cached -- .github/workflows; then
-            git restore --source=HEAD --staged --worktree .github/workflows
+          if [ "${CAN_SYNC_WORKFLOW_FILES}" != "true" ] && { [ -n "${upstream_workflow_file_changes}" ] || [ -n "${fork_workflow_file_changes}" ]; }; then
             {
               echo "### Workflow updates skipped"
               echo
-              echo "Workflow file updates from \`${UPSTREAM_REPOSITORY}:main\` were not applied automatically because GitHub blocks workflow-file pushes from this workflow token."
+              echo "No action was taken on \`main\`."
+              echo
+              echo "The fork main branch cannot be updated because the commit range includes workflow file changes."
+              echo "GitHub blocks workflow-file updates from the default workflow token."
+              echo "No partial sync was pushed, so \`main\` stays clean."
+              echo
+              if [ -n "${upstream_workflow_file_changes}" ]; then
+                echo "Workflow files changed upstream:"
+                echo
+                echo "\`\`\`"
+                echo "${upstream_workflow_file_changes}"
+                echo "\`\`\`"
+                echo
+              fi
+              if [ -n "${fork_workflow_file_changes}" ]; then
+                echo "Workflow files changed in this fork:"
+                echo
+                echo "\`\`\`"
+                echo "${fork_workflow_file_changes}"
+                echo "\`\`\`"
+                echo
+              fi
               echo
               write_workflow_sync_steps
             } >> "$GITHUB_STEP_SUMMARY"
 
-            echo "::warning title=Workflow updates skipped::Open https://github.com/settings/personal-access-tokens/new to create the token, then add it at https://github.com/${GITHUB_REPOSITORY}/settings/secrets/actions/new as MAINTENANCE_SYNC_TOKEN."
-          fi
-
-          if git diff --cached --quiet; then
-            git merge --abort || true
-            {
-              echo "### Auto-sync skipped"
-              echo
-              echo "Only workflow file updates were available from \`${UPSTREAM_REPOSITORY}:main\`."
-              echo "No updates were pushed to \`main\`."
-            } >> "$GITHUB_STEP_SUMMARY"
-
+            echo "::warning title=Auto-sync skipped::Open the job summary for step-by-step setup. Add MAINTENANCE_SYNC_TOKEN, then rerun this workflow."
             exit 0
           fi
 
-          npm ci
-          npm run build
-          npm run test:email
-          npm test
+          target_ref="upstream/main"
+          result_message="The fork main branch now points exactly at \`${UPSTREAM_REPOSITORY}:main\`."
 
-          git commit -m "chore: sync upstream main"
-          git push origin main
+          if [ "${merge_base_sha}" != "${origin_main_sha}" ]; then
+            git switch -C main origin/main
+
+            if ! git rebase upstream/main; then
+              conflicted_files="$(git diff --name-only --diff-filter=U | sort -u || true)"
+              git rebase --abort || true
+
+              {
+                echo "### Auto-sync needs your help"
+                echo
+                echo "No action was taken on \`main\`."
+                echo "Your fork has custom commits, and Git could not place them on top of the latest upstream version automatically."
+                echo
+                if [ -n "${conflicted_files}" ]; then
+                  echo "Files needing attention:"
+                  echo
+                  echo "\`\`\`"
+                  echo "${conflicted_files}"
+                  echo "\`\`\`"
+                  echo
+                fi
+                echo "### What to do next"
+                echo
+                echo "1. Open your fork's branches page: https://github.com/${GITHUB_REPOSITORY}/branches"
+                echo "2. Create or keep a separate branch for your custom work."
+                echo "3. Sync \`main\` with upstream from GitHub, or rerun this workflow after resolving the listed files."
+                echo "4. Re-apply your custom changes on the separate branch, then test the daily feed."
+                echo
+                echo "For non-technical users: copy the file list above and ask a maintainer to resolve the custom changes against the latest upstream version."
+              } >> "$GITHUB_STEP_SUMMARY"
+
+              echo "::warning title=Auto-sync needs help::Open the job summary for step-by-step recovery."
+              exit 0
+            fi
+
+            target_ref="HEAD"
+            result_message="The fork main branch now contains latest \`${UPSTREAM_REPOSITORY}:main\`, with your custom commits replayed on top."
+          fi
+
+          if ! git push --force-with-lease="refs/heads/main:${origin_main_sha}" origin "${target_ref}:refs/heads/main"; then
+            {
+              echo "### Auto-sync failed"
+              echo
+              echo "The workflow could not update \`main\`."
+              echo "Most likely cause: branch protection blocks force pushes, or another update changed \`main\` during this run."
+              echo
+              echo "### What to do next"
+              echo
+              echo "1. Open branch settings: https://github.com/${GITHUB_REPOSITORY}/settings/branches"
+              echo "2. Check whether \`main\` has a branch protection rule."
+              echo "3. If this fork is only used for the daily feed, allow force pushes on \`main\` or remove protection from \`main\`."
+              echo "4. Open this workflow page: https://github.com/${GITHUB_REPOSITORY}/actions/workflows/maintenance.yml"
+              echo "5. Click **Run workflow**."
+              echo
+              echo "If you use \`main\` for your own work, keep that work in commits so this workflow can rebase them on top of upstream."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "::error title=Auto-sync failed::Open the job summary for step-by-step recovery."
+            exit 1
+          fi
 
           {
             echo "### Auto-sync completed"
             echo
-            echo "The fork main branch was updated from \`${UPSTREAM_REPOSITORY}:main\` after verification passed."
+            echo "${result_message}"
+            echo "No sync commit was created."
             if [ "${CAN_SYNC_WORKFLOW_FILES}" = "true" ]; then
               echo "Workflow files were included because \`MAINTENANCE_SYNC_TOKEN\` is configured."
-            else
-              echo "Workflow files are preserved from the fork."
-              echo
-              write_workflow_sync_steps
             fi
           } >> "$GITHUB_STEP_SUMMARY"
