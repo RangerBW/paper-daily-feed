@@ -150,6 +150,11 @@ const journals: Journal[] = [
     rss: "https://rss.sciencedirect.com/publication/science/09242716"
   },
   {
+    name: "International Journal of Applied Earth Observation and Geoinformation",
+    abbr: "JAG",
+    rss: "https://rss.sciencedirect.com/publication/science/15698432"
+  },
+  {
     name: "Remote Sensing of Environment",
     abbr: "RSE",
     rss: "https://rss.sciencedirect.com/publication/science/00344257"
