@@ -17,14 +17,14 @@
 - Make the guidance accessible to users without a technical background. Be friendly and use everyday language, explain any necessary jargon briefly, and always give one clear next action.
 - Complete every step you can with the GitHub capabilities already available. Prefer `gh` when it is installed; do not require a local clone unless your tools need one.
 - Ask one question at a time, use plain language, and explain where to find unfamiliar values. Ask about optional features before requesting their settings.
-- Explain only actions that the user must perform manually, such as GitHub authorization or secure credential entry. Resume automation after each manual step.
+- Keep the user's role conversational: ask them only for choices, information, and confirmation, then perform all navigation, commands, configuration, and verification yourself. When GitHub authorization or secure credential entry is required, initiate the secure prompt directly and resume automatically after confirmation instead of handing the user setup instructions.
 - Confirm the authenticated GitHub account and target fork before making changes. Reuse a valid existing fork when possible. Never modify the canonical repository, push commits, or change project files during deployment.
 
 ## Protect credentials
 
 - Never ask the user to paste a password, token, authorization code, or API key into chat.
 - Never expose credentials in command arguments, output, logs, temporary files, configuration variables, or shell history.
-- Use a secure secret-input capability or direct the user to the target fork's GitHub Actions Secrets form. Wait for confirmation without reading the entered value.
+- Open a secure secret-input prompt yourself and save the value to the target fork. The user should only enter the value in that prompt; do not delegate GitHub navigation or secret creation to them.
 - Keep `APP_CONFIG` free of credentials. Show the proposed non-secret configuration and obtain confirmation before replacing an existing value.
 
 ## Finish the deployment
