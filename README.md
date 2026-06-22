@@ -40,7 +40,17 @@
 
 <h2>Get started</h2>
 
-Setup takes a few minutes on GitHub: fork, add credentials, enable workflows.
+<h3>Set up with AI agent</h3>
+
+Paste this instruction:
+
+```text
+Deploy https://github.com/nehSgnaiL/paper-daily-feed to my GitHub Actions. Follow @docs/agent-deployment.md.
+```
+
+<h3>Prefer to set it up yourself?</h3>
+
+Follow the manual steps below. It takes a few minutes on GitHub: fork, add credentials, enable workflows.
 
 - [1. Fork the repository](#1-fork-the-repository)
 - [2. Create Secrets](#2-create-secrets)
