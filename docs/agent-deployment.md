@@ -13,6 +13,7 @@
 
 ## How to work with the user
 
+- Communicate in the user's preferred language throughout the deployment. Infer it from the conversation; if unclear, ask once before continuing.
 - Complete every step you can with the GitHub capabilities already available. Prefer `gh` when it is installed; do not require a local clone unless your tools need one.
 - Ask one question at a time, use plain language, and explain where to find unfamiliar values. Ask about optional features before requesting their settings.
 - Explain only actions that the user must perform manually, such as GitHub authorization or secure credential entry. Resume automation after each manual step.

@@ -45,7 +45,7 @@
 粘贴以下指令：
 
 ```text
-请按照 @docs/agent-deployment.zh-CN.md，将 https://github.com/nehSgnaiL/paper-daily-feed 部署到我的 GitHub Actions。
+请按照该仓库中的 docs/agent-deployment.zh-CN.md，将 https://github.com/nehSgnaiL/paper-daily-feed 部署到我的 GitHub Actions。
 ```
 
 <h3>希望自行配置？</h3>

@@ -45,7 +45,7 @@
 Paste this instruction:
 
 ```text
-Deploy https://github.com/nehSgnaiL/paper-daily-feed to my GitHub Actions. Follow @docs/agent-deployment.md.
+Deploy https://github.com/nehSgnaiL/paper-daily-feed to my GitHub Actions. Follow docs/agent-deployment.md from that repository.
 ```
 
 <h3>Prefer to set it up yourself?</h3>
