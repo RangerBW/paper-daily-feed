@@ -48,6 +48,8 @@ Paste this instruction:
 Deploy https://github.com/nehSgnaiL/paper-daily-feed to my GitHub Actions. Follow docs/agent-deployment.md from that repository.
 ```
 
+---
+
 <h3>Prefer to set it up yourself?</h3>
 
 Follow the manual steps below. It takes a few minutes on GitHub: fork, add credentials, enable workflows.
