@@ -8,7 +8,7 @@
     "build": "tsc --noEmit",
     "test": "vitest run",
     "test:email": "vitest run tests/email.test.ts",
-    "test:feeds:live": "node scripts/run-live-feed-tests.mjs",
+    "test:feeds:live": "cross-env PAPER_FEED_LIVE=1 vitest run tests/feed-live.test.ts",
     "start": "tsx src/index.ts",
     "preview-email": "tsx src/index.ts preview-email",
     "setup-profile": "tsx src/index.ts setup-profile",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^6.4.17",
+    "cross-env": "^10.1.0",
     "tsx": "^4.22.4",
     "typescript": "^5.7.2",
     "vitest": "^4.1.5"
