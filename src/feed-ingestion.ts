@@ -1,5 +1,5 @@
 import type { AppConfig } from "./app-config.js";
-import { fetchJournalFeeds } from "./rss.js";
+import { fetchFeedSources } from "./rss.js";
 import type { FeedPaper, FeedSource, Journal } from "./types.js";
 
 export type FeedIngestionResult = {
@@ -59,7 +59,7 @@ export async function ingestFeedPapers(
 ): Promise<FeedIngestionResult> {
   const sources = configuredFeedSources(catalog, config);
   console.log(`Fetching ${sources.length} RSS feeds...`);
-  const allPapers = await fetchJournalFeeds(sources);
+  const allPapers = await fetchFeedSources(sources);
   const recentPapers = recentFeedPapers(allPapers, maxAgeDays, now);
   console.log(`Fetched ${allPapers.length} RSS papers; ${recentPapers.length} are recent.`);
   return { sources, allPapers, recentPapers };

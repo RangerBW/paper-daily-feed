@@ -1,10 +1,5 @@
 import type { AppConfig, SummaryConfig } from "./app-config.js";
-import {
-  DELIVERY_HISTORY_PATH,
-  recordDeliveredPapers,
-  saveDeliveryHistory,
-  type DeliveryHistory
-} from "./delivery-history.js";
+import type { DeliveryHistorySession } from "./delivery-history.js";
 import { renderEmail, sendEmail } from "./email.js";
 import { createOpenAISummarizer, summarizeRecommendedPapers } from "./summary.js";
 import type { RecommendedPaper } from "./types.js";
@@ -75,7 +70,7 @@ export async function deliverRecommendations(
   recommendations: RecommendedPaper[],
   mode: DeliveryMode,
   config: Pick<AppConfig, "summary" | "delivery" | "runtime">,
-  deliveryHistory: DeliveryHistory,
+  deliveryHistory: DeliveryHistorySession,
   env: Env = process.env,
   now = new Date()
 ): Promise<RecommendationDeliveryResult> {
@@ -97,10 +92,7 @@ export async function deliverRecommendations(
   console.log(`Sending ${prepared.length} recommendations via SMTP...`);
   const delivery = await sendEmail(config.delivery, html, emailSubject(now));
   if (prepared.length > 0) {
-    saveDeliveryHistory(
-      DELIVERY_HISTORY_PATH,
-      recordDeliveredPapers(deliveryHistory, prepared, now, env)
-    );
+    deliveryHistory.confirmSuccessfulDelivery(prepared, now);
   }
   const deliveryDetails = describeDelivery(delivery);
   console.log(`Sent ${prepared.length} recommendations${deliveryDetails}.`);

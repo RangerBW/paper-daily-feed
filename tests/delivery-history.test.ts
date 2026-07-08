@@ -1,14 +1,8 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  createPaperFingerprint,
-  filterUndeliveredPapers,
-  loadDeliveryHistory,
-  recordDeliveredPapers,
-  saveDeliveryHistory
-} from "../src/delivery-history.js";
+import { openDeliveryHistory } from "../src/delivery-history.js";
 import type { FeedPaper } from "../src/types.js";
 
 const tempDirs: string[] = [];
@@ -37,62 +31,57 @@ afterEach(() => {
 });
 
 describe("delivery history", () => {
-  it("creates stable fingerprints from normalized URL and title with an optional salt", () => {
-    const first = createPaperFingerprint(paper(), {});
-    const second = createPaperFingerprint(
-      paper({
-        title: "Transit   Accessibility and Equity",
-        url: "https://example.test/Paper?id=42&utm_medium=email"
-      }),
-      {}
-    );
-    const salted = createPaperFingerprint(paper(), { DELIVERY_HISTORY_SALT: "private-salt" });
+  it("reports that Delivery may have succeeded when persistence fails", () => {
+    const directoryPath = tempPath().replace("/.delivery-history.json", "");
+    const history = openDeliveryHistory({ path: directoryPath, env: {} });
 
-    expect(first).toMatch(/^[a-f0-9]{64}$/);
-    expect(second).toBe(first);
-    expect(salted).not.toBe(first);
+    expect(() => history.confirmSuccessfulDelivery([paper()], new Date("2026-05-11T00:00:00Z"))).toThrow(
+      "Delivery may have succeeded, but Delivery History could not be saved"
+    );
+  });
+
+  it("creates stable fingerprints from normalized URL and title with an optional salt", () => {
+    const path = tempPath();
+    const original = paper();
+    const equivalent = paper({
+      title: "Transit   Accessibility and Equity",
+      url: "https://example.test/Paper?id=42&utm_medium=email"
+    });
+    const history = openDeliveryHistory({ path, env: {} });
+    history.confirmSuccessfulDelivery([original], new Date("2026-05-11T00:00:00Z"));
+
+    expect(history.filterUndeliveredPapers([equivalent])).toEqual([]);
+    expect(openDeliveryHistory({ path, env: { DELIVERY_HISTORY_SALT: "private-salt" } }).filterUndeliveredPapers([equivalent])).toEqual([equivalent]);
   });
 
   it("loads missing or malformed history files as empty history", () => {
     const path = tempPath();
 
-    expect(loadDeliveryHistory(path)).toEqual({ version: 1, delivered: [] });
+    expect(openDeliveryHistory({ path, env: {} }).filterUndeliveredPapers([paper()])).toEqual([paper()]);
 
-    saveDeliveryHistory(path, { version: 1, delivered: [{ fingerprint: "abc", deliveredAt: "bad-date" }] });
+    writeFileSync(path, "not valid json");
 
-    expect(loadDeliveryHistory(path)).toEqual({ version: 1, delivered: [] });
+    expect(openDeliveryHistory({ path, env: {} }).filterUndeliveredPapers([paper()])).toEqual([paper()]);
   });
 
   it("filters papers already present in delivery history", () => {
     const delivered = paper();
     const fresh = paper({ title: "Fresh paper", url: "https://example.test/fresh" });
-    const history = recordDeliveredPapers({ version: 1, delivered: [] }, [delivered], new Date("2026-05-11T00:00:00Z"), {});
+    const history = openDeliveryHistory({ path: tempPath(), env: {} });
+    history.confirmSuccessfulDelivery([delivered], new Date("2026-05-11T00:00:00Z"));
 
-    expect(filterUndeliveredPapers([delivered, fresh], history, {})).toEqual([fresh]);
+    expect(history.filterUndeliveredPapers([delivered, fresh])).toEqual([fresh]);
   });
 
   it("records final delivered papers once and prunes entries older than retention", () => {
-    const recent = createPaperFingerprint(paper({ title: "Recent", url: "https://example.test/recent" }), {});
-    const old = createPaperFingerprint(paper({ title: "Old", url: "https://example.test/old" }), {});
-    const deliveredAt = new Date("2026-05-11T00:00:00Z");
-    const updated = recordDeliveredPapers(
-      {
-        version: 1,
-        delivered: [
-          { fingerprint: recent, deliveredAt: "2026-05-10T00:00:00.000Z" },
-          { fingerprint: old, deliveredAt: "2025-01-01T00:00:00.000Z" }
-        ]
-      },
-      [paper({ title: "Recent", url: "https://example.test/recent" }), paper({ title: "New", url: "https://example.test/new" })],
-      deliveredAt,
-      {}
-    );
+    const path = tempPath();
+    const old = paper({ title: "Old", url: "https://example.test/old" });
+    const recent = paper({ title: "Recent", url: "https://example.test/recent" });
+    const history = openDeliveryHistory({ path, env: {} });
+    history.confirmSuccessfulDelivery([old], new Date("2025-01-01T00:00:00Z"));
+    history.confirmSuccessfulDelivery([recent, recent], new Date("2026-05-11T00:00:00Z"));
 
-    expect(updated.delivered).toHaveLength(2);
-    expect(updated.delivered.map((entry) => entry.fingerprint)).toEqual([
-      recent,
-      createPaperFingerprint(paper({ title: "New", url: "https://example.test/new" }), {})
-    ]);
-    expect(updated.delivered.every((entry) => entry.deliveredAt !== "2025-01-01T00:00:00.000Z")).toBe(true);
+    const reopened = openDeliveryHistory({ path, env: {} });
+    expect(reopened.filterUndeliveredPapers([old, recent])).toEqual([old]);
   });
 });

@@ -2,7 +2,7 @@ import journals from "../data/journals.config.js";
 import type { AppConfig } from "./app-config.js";
 import { loadAppConfig } from "./app-config.js";
 import { configSummaryLines } from "./config-summary.js";
-import { filterUndeliveredPapers, loadDeliveryHistory } from "./delivery-history.js";
+import { openDeliveryHistory } from "./delivery-history.js";
 import { buildInterestCorpus } from "./interest-corpus.js";
 import { rankPapers, resolveMatchingProvider } from "./matching.js";
 import { enrichFeedPaperMetadata, repairRecommendationMetadata } from "./paper-metadata.js";
@@ -38,8 +38,8 @@ export async function runDailyFeed(
   console.log(`Built ${interestCorpus.length} interest documents.`);
 
   const recentPapers = await fetchRecentFeedPapers(journals, config.feeds, config.matching.maxPaperAgeDays);
-  const deliveryHistory = loadDeliveryHistory();
-  const eligiblePapers = filterUndeliveredPapers(recentPapers, deliveryHistory, env);
+  const deliveryHistory = openDeliveryHistory({ env });
+  const eligiblePapers = deliveryHistory.filterUndeliveredPapers(recentPapers);
   console.log(
     `Filtered ${recentPapers.length - eligiblePapers.length} already delivered papers; ${eligiblePapers.length} candidates remain.`
   );

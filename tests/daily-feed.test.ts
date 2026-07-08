@@ -25,12 +25,12 @@ const metadataRepairMock = vi.hoisted(() => ({
 const emailMock = vi.hoisted(() => ({
   sendEmail: vi.fn()
 }));
-const historyMock = vi.hoisted(() => ({
-  DELIVERY_HISTORY_PATH: ".delivery-history.json",
+const historySessionMock = vi.hoisted(() => ({
   filterUndeliveredPapers: vi.fn(),
-  loadDeliveryHistory: vi.fn(),
-  recordDeliveredPapers: vi.fn(),
-  saveDeliveryHistory: vi.fn()
+  confirmSuccessfulDelivery: vi.fn()
+}));
+const historyMock = vi.hoisted(() => ({
+  openDeliveryHistory: vi.fn(() => historySessionMock)
 }));
 
 vi.mock("../src/interest-corpus.js", () => corpusMock);
@@ -158,12 +158,7 @@ const interest: InterestDocument = {
 describe("runDailyFeed delivery history", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    historyMock.loadDeliveryHistory.mockReturnValue({ version: 1, delivered: [] });
-    historyMock.filterUndeliveredPapers.mockImplementation((papers: FeedPaper[]) => papers.slice(1));
-    historyMock.recordDeliveredPapers.mockReturnValue({
-      version: 1,
-      delivered: [{ fingerprint: "fresh", deliveredAt: "2026-05-11T00:00:00.000Z" }]
-    });
+    historySessionMock.filterUndeliveredPapers.mockImplementation((papers: FeedPaper[]) => papers.slice(1));
     corpusMock.buildInterestCorpus.mockResolvedValue([interest]);
     feedMock.fetchRecentFeedPapers.mockResolvedValue([paper("Delivered"), paper("Fresh")]);
     metadataEnrichmentMock.enrichFeedPaperMetadata.mockImplementation(async (papers) =>
@@ -177,12 +172,11 @@ describe("runDailyFeed delivery history", () => {
   it("filters delivered papers before ranking and saves history after successful delivery", async () => {
     const result = await runDailyFeed("run", {}, config());
 
-    expect(historyMock.loadDeliveryHistory).toHaveBeenCalledOnce();
-    expect(historyMock.filterUndeliveredPapers).toHaveBeenCalledWith(
-      [paper("Delivered"), paper("Fresh")],
-      { version: 1, delivered: [] },
-      {}
-    );
+    expect(historyMock.openDeliveryHistory).toHaveBeenCalledWith({ env: {} });
+    expect(historySessionMock.filterUndeliveredPapers).toHaveBeenCalledWith([
+      paper("Delivered"),
+      paper("Fresh")
+    ]);
     expect(metadataEnrichmentMock.enrichFeedPaperMetadata).toHaveBeenCalledWith(
       [paper("Fresh")],
       config().metadataEnrichment
@@ -202,13 +196,10 @@ describe("runDailyFeed delivery history", () => {
       expect.any(String),
       expect.stringMatching(/^Paper feed for \d{1,2}(?:st|nd|rd|th) [A-Z][a-z]+ \d{4}$/)
     );
-    expect(historyMock.recordDeliveredPapers).toHaveBeenCalledWith(
-      { version: 1, delivered: [] },
+    expect(historySessionMock.confirmSuccessfulDelivery).toHaveBeenCalledWith(
       [recommended("Fresh")],
-      expect.any(Date),
-      {}
+      expect.any(Date)
     );
-    expect(historyMock.saveDeliveryHistory).toHaveBeenCalledOnce();
     expect(result.sent).toBe(true);
   });
 
@@ -216,8 +207,8 @@ describe("runDailyFeed delivery history", () => {
     await runDailyFeed("preview-email", {}, config());
     await runDailyFeed("run", {}, config({ runtime: { debug: true, sendEmpty: false } }));
 
-    expect(historyMock.filterUndeliveredPapers).toHaveBeenCalledTimes(2);
-    expect(historyMock.saveDeliveryHistory).not.toHaveBeenCalled();
+    expect(historySessionMock.filterUndeliveredPapers).toHaveBeenCalledTimes(2);
+    expect(historySessionMock.confirmSuccessfulDelivery).not.toHaveBeenCalled();
   });
 
   it("does not save history when delivery fails", async () => {
@@ -225,6 +216,18 @@ describe("runDailyFeed delivery history", () => {
 
     await expect(runDailyFeed("run", {}, config())).rejects.toThrow("smtp down");
 
-    expect(historyMock.saveDeliveryHistory).not.toHaveBeenCalled();
+    expect(historySessionMock.confirmSuccessfulDelivery).not.toHaveBeenCalled();
+  });
+
+  it("reports possible delivery when Delivery History persistence fails after SMTP success", async () => {
+    historySessionMock.confirmSuccessfulDelivery.mockImplementation(() => {
+      throw new Error("Delivery may have succeeded, but Delivery History could not be saved: disk full");
+    });
+
+    await expect(runDailyFeed("run", {}, config())).rejects.toThrow(
+      "Delivery may have succeeded, but Delivery History could not be saved"
+    );
+
+    expect(emailMock.sendEmail).toHaveBeenCalledOnce();
   });
 });

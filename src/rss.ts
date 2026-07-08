@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createProgress } from "./progress.js";
 import { fetchCrossrefJournalWorks, type CrossrefMetadata } from "./crossref.js";
-import type { FeedPaper, FeedSource, Journal } from "./types.js";
+import type { FeedPaper, FeedSource } from "./types.js";
 import { stripHtml } from "./text.js";
 
 type ParserItem = {
@@ -80,9 +80,9 @@ function rssHeadersForProfile(profile: RssHeaders): RssHeaders {
   };
 }
 
-type FetchableFeed = Journal | FeedSource;
+type FeedPublisher = "Springer" | "AAAS" | "PNAS" | "Taylor & Francis" | "Elsevier" | "Royal Society" | "IEEE";
 
-type FetchJournalFeedsOptions = {
+type FetchFeedSourcesOptions = {
   delayMs?: number;
   delayRangeMs?: {
     minMs: number;
@@ -92,7 +92,7 @@ type FetchJournalFeedsOptions = {
   retryDelayMs?: number;
   deferredRetryDelayMs?: number;
   curlFallback?: boolean;
-  curlFetcher?: (journal: FetchableFeed) => Promise<FeedPaper[]>;
+  curlFetcher?: (source: FeedSource) => Promise<FeedPaper[]>;
   crossrefFetcher?: (issn: string) => Promise<CrossrefMetadata[]>;
 };
 
@@ -116,18 +116,14 @@ function sampleDelayMs(range: { minMs: number; maxMs: number }): number {
   return Math.round(minMs + (maxMs - minMs) * centralBias);
 }
 
-function nextFeedDelayMs(options: FetchJournalFeedsOptions): number {
+function nextFeedDelayMs(options: FetchFeedSourcesOptions): number {
   if (options.delayMs !== undefined) {
     return options.delayMs;
   }
   return sampleDelayMs(options.delayRangeMs ?? DEFAULT_RSS_REQUEST_DELAY_RANGE_MS);
 }
 
-function feedLabel(feed: FetchableFeed): string {
-  return "kind" in feed ? feed.name : (feed.abbr ?? feed.name);
-}
-
-function feedPublisher(feed: FetchableFeed): string | undefined {
+function feedPublisher(feed: FeedSource): FeedPublisher | undefined {
   let host: string;
   try {
     host = new URL(feed.rss).hostname.toLowerCase();
@@ -160,13 +156,13 @@ function feedPublisher(feed: FetchableFeed): string | undefined {
   return undefined;
 }
 
-function feedLogLabel(feed: FetchableFeed): string {
-  const label = feedLabel(feed);
+function feedLogLabel(feed: FeedSource): string {
+  const label = feed.name;
   const publisher = feedPublisher(feed);
   return publisher ? `[${publisher}] ${label}` : label;
 }
 
-function feedHost(feed: FetchableFeed): string | undefined {
+function feedHost(feed: FeedSource): string | undefined {
   try {
     return new URL(feed.rss).hostname.toLowerCase();
   } catch {
@@ -174,11 +170,11 @@ function feedHost(feed: FetchableFeed): string | undefined {
   }
 }
 
-function feedScheduleKey(feed: FetchableFeed): string {
-  return feedPublisher(feed) ?? feedHost(feed) ?? feedLabel(feed);
+function feedScheduleKey(feed: FeedSource): string {
+  return feedPublisher(feed) ?? feedHost(feed) ?? feed.name;
 }
 
-function interleaveFeedsByPublisher<TFeed extends FetchableFeed>(feeds: TFeed[]): TFeed[] {
+function interleaveFeedsByPublisher<TFeed extends FeedSource>(feeds: TFeed[]): TFeed[] {
   const queues = new Map<string, TFeed[]>();
   for (const feed of feeds) {
     const key = feedScheduleKey(feed);
@@ -249,16 +245,16 @@ function normalizeAbstract(item: ParserItem): string {
   return isBibliographicMetadataOnly(abstract) ? "" : abstract;
 }
 
-function isScienceDirectItem(item: ParserItem): boolean {
-  return [item.link, item.guid].some((value) => value?.toLowerCase().includes("sciencedirect.com"));
+function isScienceDirectItem(item: ParserItem, publisher?: FeedPublisher): boolean {
+  return publisher === "Elsevier" || [item.link, item.guid].some((value) => value?.toLowerCase().includes("sciencedirect.com"));
 }
 
-function isTaylorFrancisItem(item: ParserItem): boolean {
-  return [item.link, item.guid].some((value) => value?.toLowerCase().includes("tandfonline.com"));
+function isTaylorFrancisItem(item: ParserItem, publisher?: FeedPublisher): boolean {
+  return publisher === "Taylor & Francis" || [item.link, item.guid].some((value) => value?.toLowerCase().includes("tandfonline.com"));
 }
 
-function parseScienceDirectAuthors(item: ParserItem): string[] {
-  if (!isScienceDirectItem(item)) {
+function parseScienceDirectAuthors(item: ParserItem, publisher?: FeedPublisher): string[] {
+  if (!isScienceDirectItem(item, publisher)) {
     return [];
   }
 
@@ -395,7 +391,7 @@ function splitAuthorValue(value: string): string[] {
   return [text];
 }
 
-function normalizeAuthors(item: ParserItem): string[] | undefined {
+function normalizeAuthors(item: ParserItem, publisher?: FeedPublisher): string[] | undefined {
   const candidates = [
     ...asStringArray(item.dcCreators),
     ...asStringArray(item.authors),
@@ -407,12 +403,12 @@ function normalizeAuthors(item: ParserItem): string[] | undefined {
     .map((value) => value.trim())
     .filter((value, index, values) => value.length > 0 && values.indexOf(value) === index);
 
-  const fallbackAuthors = authors.length > 0 ? authors : parseScienceDirectAuthors(item);
+  const fallbackAuthors = authors.length > 0 ? authors : parseScienceDirectAuthors(item, publisher);
   return fallbackAuthors.length > 0 ? fallbackAuthors : undefined;
 }
 
-function parseTaylorFrancisFirstAffiliation(item: ParserItem): string | undefined {
-  if (!isTaylorFrancisItem(item)) {
+function parseTaylorFrancisFirstAffiliation(item: ParserItem, publisher?: FeedPublisher): string | undefined {
+  if (!isTaylorFrancisItem(item, publisher)) {
     return undefined;
   }
 
@@ -428,14 +424,14 @@ function parseTaylorFrancisFirstAffiliation(item: ParserItem): string | undefine
   return firstAffiliation;
 }
 
-function normalizeFirstAffiliation(item: ParserItem): string | undefined {
+function normalizeFirstAffiliation(item: ParserItem, publisher?: FeedPublisher): string | undefined {
   const candidates = [
     ...asStringArray(item.affiliations),
     ...asStringArray(item.dcAffiliations),
     ...asStringArray(item.prismAffiliations)
   ];
   const firstAffiliation = candidates.map(normalizeField).find((value) => value.length > 0);
-  return firstAffiliation || parseTaylorFrancisFirstAffiliation(item);
+  return firstAffiliation || parseTaylorFrancisFirstAffiliation(item, publisher);
 }
 
 function normalizeMetadataText(item: ParserItem): string | undefined {
@@ -455,8 +451,8 @@ function normalizeMetadataText(item: ParserItem): string | undefined {
   return text || undefined;
 }
 
-function normalizeDate(item: ParserItem): Date | null {
-  if (isTaylorFrancisItem(item)) {
+function normalizeDate(item: ParserItem, publisher?: FeedPublisher): Date | null {
+  if (isTaylorFrancisItem(item, publisher)) {
     const taylorFrancisDate = parseDateValue(item.prismCoverDate ?? item.prismPublicationDate);
     if (taylorFrancisDate) {
       return taylorFrancisDate;
@@ -470,7 +466,7 @@ function normalizeDate(item: ParserItem): Date | null {
     return publishedAt;
   }
 
-  return parseScienceDirectPublicationDate(item);
+  return parseScienceDirectPublicationDate(item, publisher);
 }
 
 function parseDateValue(value: string | undefined): Date | null {
@@ -478,8 +474,8 @@ function parseDateValue(value: string | undefined): Date | null {
   return publishedAt && !Number.isNaN(publishedAt.getTime()) ? publishedAt : null;
 }
 
-function parseScienceDirectPublicationDate(item: ParserItem): Date | null {
-  if (!isScienceDirectItem(item)) {
+function parseScienceDirectPublicationDate(item: ParserItem, publisher?: FeedPublisher): Date | null {
+  if (!isScienceDirectItem(item, publisher)) {
     return null;
   }
 
@@ -503,7 +499,7 @@ function parseScienceDirectPublicationDate(item: ParserItem): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-export function normalizeFeedItem(journal: string, item: ParserItem): FeedPaper | null {
+export function normalizeFeedItem(sourceName: string, item: ParserItem, publisher?: FeedPublisher): FeedPaper | null {
   const title = stripHtml(item.title ?? "");
   const url = (item.link ?? item.guid ?? "").trim();
 
@@ -511,16 +507,16 @@ export function normalizeFeedItem(journal: string, item: ParserItem): FeedPaper 
     return null;
   }
 
-  const authors = normalizeAuthors(item);
-  const firstAffiliation = normalizeFirstAffiliation(item);
+  const authors = normalizeAuthors(item, publisher);
+  const firstAffiliation = normalizeFirstAffiliation(item, publisher);
   const metadataText = normalizeMetadataText(item);
 
   return {
-    journal,
+    journal: sourceName,
     title,
     abstract: normalizeAbstract(item),
     url,
-    publishedAt: normalizeDate(item),
+    publishedAt: normalizeDate(item, publisher),
     ...(authors ? { authors } : {}),
     ...(firstAffiliation ? { firstAffiliation } : {}),
     ...(metadataText ? { metadataText } : {})
@@ -587,8 +583,8 @@ type FeedAttemptResult =
       error: unknown;
     };
 
-async function fetchJournalFeedWithRetries(
-  journal: FetchableFeed,
+async function fetchFeedSourceWithRetries(
+  source: FeedSource,
   retryCount: number,
   retryDelayMs: number,
   options: {
@@ -607,7 +603,7 @@ async function fetchJournalFeedWithRetries(
         RSS_HEADER_PROFILES[((options.startProfileIndex ?? 0) + attempt) % RSS_HEADER_PROFILES.length] ?? {};
       return {
         status: "fulfilled",
-        papers: await fetchJournalFeedWithHeaders(journal, rssHeadersForProfile(profile))
+        papers: await fetchFeedSourceWithHeaders(source, rssHeadersForProfile(profile))
       };
     } catch (error) {
       lastError = error;
@@ -632,8 +628,8 @@ async function fetchJournalFeedWithRetries(
   };
 }
 
-async function fetchJournalFeedWithHeaders(journal: FetchableFeed, headers: RssHeaders): Promise<FeedPaper[]> {
-  const response = await fetch(journal.rss, {
+async function fetchFeedSourceWithHeaders(source: FeedSource, headers: RssHeaders): Promise<FeedPaper[]> {
+  const response = await fetch(source.rss, {
     headers
   });
 
@@ -647,21 +643,21 @@ async function fetchJournalFeedWithHeaders(journal: FetchableFeed, headers: RssH
     throw new Error(`Expected RSS/XML feed but received ${contentType ?? "unknown content type"}`);
   }
 
-  return parseFeedBody(journal, body);
+  return parseFeedBody(source, body);
 }
 
-async function parseFeedBody(journal: FetchableFeed, body: string): Promise<FeedPaper[]> {
+async function parseFeedBody(source: FeedSource, body: string): Promise<FeedPaper[]> {
   if (!looksLikeFeedXml(body)) {
     throw new Error("Expected RSS/XML feed but received non-XML body");
   }
 
   const feed = await parser.parseString(body);
   return feed.items
-    .map((item) => normalizeFeedItem(feedLabel(journal), item))
+    .map((item) => normalizeFeedItem(source.name, item, feedPublisher(source)))
     .filter((paper): paper is FeedPaper => paper !== null);
 }
 
-async function fetchJournalFeedWithCurl(journal: FetchableFeed): Promise<FeedPaper[]> {
+async function fetchFeedSourceWithCurl(source: FeedSource): Promise<FeedPaper[]> {
   const headers = rssHeadersForProfile(RSS_HEADER_PROFILES[0] ?? {});
   const args = [
     "--location",
@@ -677,44 +673,44 @@ async function fetchJournalFeedWithCurl(journal: FetchableFeed): Promise<FeedPap
   for (const [name, value] of Object.entries(headers)) {
     args.push("--header", `${name}: ${value}`);
   }
-  args.push("--", journal.rss);
+  args.push("--", source.rss);
 
   const { stdout } = await execFileAsync("curl", args, {
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,
     timeout: 45_000
   });
-  return parseFeedBody(journal, stdout);
+  return parseFeedBody(source, stdout);
 }
 
-export async function fetchJournalFeed(journal: FetchableFeed): Promise<FeedPaper[]> {
-  return fetchJournalFeedWithHeaders(journal, nextRssHeaders());
+export async function fetchFeedSource(source: FeedSource): Promise<FeedPaper[]> {
+  return fetchFeedSourceWithHeaders(source, nextRssHeaders());
 }
 
-export async function fetchJournalFeeds(
-  journals: FetchableFeed[],
-  options: FetchJournalFeedsOptions = {}
+export async function fetchFeedSources(
+  sources: FeedSource[],
+  options: FetchFeedSourcesOptions = {}
 ): Promise<FeedPaper[]> {
-  const progress = createProgress("RSS", { total: journals.length });
+  const progress = createProgress("RSS", { total: sources.length });
   const retryCount = options.retryCount ?? DEFAULT_RSS_RETRY_COUNT;
   const retryDelayMs = options.retryDelayMs ?? DEFAULT_RSS_RETRY_DELAY_MS;
   const deferredRetryDelayMs = options.deferredRetryDelayMs ?? DEFAULT_RSS_DEFERRED_RETRY_DELAY_MS;
   const curlFallbackEnabled = options.curlFallback ?? process.env.GITHUB_ACTIONS === "true";
-  const curlFetcher = options.curlFetcher ?? fetchJournalFeedWithCurl;
+  const curlFetcher = options.curlFetcher ?? fetchFeedSourceWithCurl;
   const crossrefFetcher = options.crossrefFetcher ?? fetchCrossrefJournalWorks;
   const papers: FeedPaper[] = [];
   let succeededSourceCount = 0;
-  const scheduledJournals = interleaveFeedsByPublisher(journals);
-  const deferred: Array<{ journal: FetchableFeed; error: unknown }> = [];
+  const scheduledSources = interleaveFeedsByPublisher(sources);
+  const deferred: Array<{ source: FeedSource; error: unknown }> = [];
 
-  for (const [index, journal] of scheduledJournals.entries()) {
+  for (const [index, source] of scheduledSources.entries()) {
     if (index > 0) {
       await wait(nextFeedDelayMs(options));
     }
 
-    const logLabel = feedLogLabel(journal);
-    const result = await fetchJournalFeedWithRetries(journal, retryCount, retryDelayMs, {
-      deferPublisherBlocks: scheduledJournals.length > 1
+    const logLabel = feedLogLabel(source);
+    const result = await fetchFeedSourceWithRetries(source, retryCount, retryDelayMs, {
+      deferPublisherBlocks: scheduledSources.length > 1
     });
     if (result.status === "fulfilled") {
       succeededSourceCount += 1;
@@ -724,7 +720,7 @@ export async function fetchJournalFeeds(
     }
 
     if (publisherBlockReason(result.error)) {
-      deferred.push({ journal, error: result.error });
+      deferred.push({ source, error: result.error });
       continue;
     }
 
@@ -735,13 +731,13 @@ export async function fetchJournalFeeds(
     await wait(deferredRetryDelayMs);
   }
 
-  for (const [index, { journal, error: originalError }] of deferred.entries()) {
+  for (const [index, { source, error: originalError }] of deferred.entries()) {
     if (index > 0) {
       await wait(nextFeedDelayMs(options));
     }
 
-    const logLabel = feedLogLabel(journal);
-    const result = await fetchJournalFeedWithRetries(journal, 0, retryDelayMs, { startProfileIndex: 1 });
+    const logLabel = feedLogLabel(source);
+    const result = await fetchFeedSourceWithRetries(source, 0, retryDelayMs, { startProfileIndex: 1 });
     if (result.status === "fulfilled") {
       succeededSourceCount += 1;
       papers.push(...result.papers);
@@ -751,7 +747,7 @@ export async function fetchJournalFeeds(
 
     if (curlFallbackEnabled && publisherBlockReason(result.error)) {
       try {
-        const fallbackPapers = await curlFetcher(journal);
+        const fallbackPapers = await curlFetcher(source);
         succeededSourceCount += 1;
         papers.push(...fallbackPapers);
         progress.step(`${logLabel}: ${fallbackPapers.length} papers (curl fallback)`);
@@ -760,13 +756,13 @@ export async function fetchJournalFeeds(
         console.log(`[RSS] ${logLabel} curl fallback failed: ${conciseError(error)}`);
       }
 
-      if (journal.issn) {
+      if (source.issn) {
         try {
-          const works = await crossrefFetcher(journal.issn);
+          const works = await crossrefFetcher(source.issn);
           const fallbackPapers = works
             .filter((work): work is CrossrefMetadata & { title: string } => Boolean(work.title))
             .map((work) => ({
-              journal: feedLabel(journal),
+              journal: source.name,
               title: work.title,
               abstract: work.abstract ?? "",
               url: work.url ?? `https://doi.org/${work.doi}`,
@@ -790,8 +786,8 @@ export async function fetchJournalFeeds(
     progress.step(blockReason ? `${logLabel}: 0 papers (${blockReason})` : `${logLabel} failed: ${String(result.error)}`);
   }
 
-  if (journals.length > 0 && succeededSourceCount === 0) {
-    throw new Error(`All ${journals.length} configured Feed Sources failed.`);
+  if (sources.length > 0 && succeededSourceCount === 0) {
+    throw new Error(`All ${sources.length} configured Feed Sources failed.`);
   }
 
   return papers;

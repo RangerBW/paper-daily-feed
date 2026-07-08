@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchJournalFeed, fetchJournalFeeds, normalizeFeedItem } from "../src/rss.js";
+import {
+  fetchFeedSource as fetchJournalFeed,
+  fetchFeedSources as fetchJournalFeeds,
+  normalizeFeedItem
+} from "../src/rss.js";
 
 describe("normalizeFeedItem", () => {
   afterEach(() => {
@@ -246,6 +250,7 @@ describe("normalizeFeedItem", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const papers = await fetchJournalFeed({
+      kind: "catalog",
       name: "Nature",
       rss: "https://www.nature.com/nature.rss"
     });
@@ -286,8 +291,8 @@ describe("normalizeFeedItem", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await fetchJournalFeed({ name: "Nature", rss: "https://www.nature.com/nature.rss" });
-    await fetchJournalFeed({ name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" });
+    await fetchJournalFeed({ kind: "catalog", name: "Nature", rss: "https://www.nature.com/nature.rss" });
+    await fetchJournalFeed({ kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" });
 
     const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
     const userAgents = calls.map((call) => {
@@ -320,7 +325,7 @@ describe("normalizeFeedItem", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const papers = await fetchJournalFeeds([{ name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" }], {
+    const papers = await fetchJournalFeeds([{ kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" }], {
       delayMs: 0,
       retryDelayMs: 0
     });
@@ -345,6 +350,7 @@ describe("normalizeFeedItem", () => {
 
     await expect(
       fetchJournalFeed({
+        kind: "catalog",
         name: "Nature Health",
         rss: "https://www.nature.com/naturehealth.rss"
       })
@@ -389,6 +395,39 @@ describe("normalizeFeedItem", () => {
     expect(papers[0]?.journal).toBe("Custom Digest");
   });
 
+  it("carries the Feed Source publisher into metadata normalization", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          `<?xml version="1.0"?>
+          <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+            <channel>
+              <title>Publisher title</title>
+              <item>
+                <title>Urban paper</title>
+                <link>https://example.test/paper</link>
+                <dc:creator>Ada Lovelace a Department of Geography, Example University</dc:creator>
+              </item>
+            </channel>
+          </rss>`,
+          { status: 200, headers: { "Content-Type": "application/rss+xml" } }
+        )
+      )
+    );
+
+    const papers = await fetchJournalFeed({
+      kind: "catalog",
+      name: "Urban Geography",
+      rss: "https://www.tandfonline.com/feed/rss/rurb20"
+    });
+
+    expect(papers[0]).toMatchObject({
+      authors: ["Ada Lovelace"],
+      firstAffiliation: "Department of Geography, Example University"
+    });
+  });
+
   it("logs publisher context while loading RSS feeds", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     vi.stubGlobal(
@@ -414,7 +453,7 @@ describe("normalizeFeedItem", () => {
     );
 
     const feeds = [
-      { name: "Nature", rss: "https://www.nature.com/nature.rss" },
+      { kind: "catalog" as const, name: "Nature", rss: "https://www.nature.com/nature.rss" },
       ...Array.from({ length: 19 }, (_, index) => ({
         kind: "custom" as const,
         name: `Custom ${index + 1}`,
@@ -463,8 +502,8 @@ describe("normalizeFeedItem", () => {
 
     const papers = await fetchJournalFeeds(
       [
-        { name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
-        { name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
+        { kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
+        { kind: "catalog", name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
       ],
       { delayMs: 0 }
     );
@@ -501,8 +540,8 @@ describe("normalizeFeedItem", () => {
 
     await fetchJournalFeeds(
       [
-        { name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
-        { name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
+        { kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
+        { kind: "catalog", name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
       ],
       { delayMs: 20 }
     );
@@ -539,8 +578,8 @@ describe("normalizeFeedItem", () => {
 
     await fetchJournalFeeds(
       [
-        { name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
-        { name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
+        { kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
+        { kind: "catalog", name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
       ],
       { delayRangeMs: { minMs: 20, maxMs: 40 } }
     );
@@ -576,10 +615,10 @@ describe("normalizeFeedItem", () => {
 
     await fetchJournalFeeds(
       [
-        { name: "Nature", rss: "https://www.nature.com/nature.rss" },
-        { name: "Nature Cities", rss: "https://www.nature.com/natcities.rss" },
-        { name: "Science", rss: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" },
-        { name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" }
+        { kind: "catalog", name: "Nature", rss: "https://www.nature.com/nature.rss" },
+        { kind: "catalog", name: "Nature Cities", rss: "https://www.nature.com/natcities.rss" },
+        { kind: "catalog", name: "Science", rss: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" },
+        { kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" }
       ],
       { delayMs: 0 }
     );
@@ -615,7 +654,7 @@ describe("normalizeFeedItem", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const papers = await fetchJournalFeeds([{ name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" }], {
+    const papers = await fetchJournalFeeds([{ kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" }], {
       delayMs: 0,
       retryDelayMs: 0
     });
@@ -653,7 +692,7 @@ describe("normalizeFeedItem", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const papers = await fetchJournalFeeds([{ name: "Nature Health", rss: "https://www.nature.com/naturehealth.rss" }], {
+    const papers = await fetchJournalFeeds([{ kind: "catalog", name: "Nature Health", rss: "https://www.nature.com/naturehealth.rss" }], {
       delayMs: 0,
       retryDelayMs: 0
     });
@@ -675,7 +714,7 @@ describe("normalizeFeedItem", () => {
     );
 
     await expect(
-      fetchJournalFeeds([{ name: "Nature Geoscience", rss: "https://www.nature.com/ngeo.rss" }], {
+      fetchJournalFeeds([{ kind: "catalog", name: "Nature Geoscience", rss: "https://www.nature.com/ngeo.rss" }], {
         delayMs: 0,
         retryCount: 1,
         retryDelayMs: 0,
@@ -711,7 +750,7 @@ describe("normalizeFeedItem", () => {
     );
 
     const papers = await fetchJournalFeeds(
-      [{ name: "Nature Health", rss: "https://www.nature.com/naturehealth.rss" }],
+      [{ kind: "catalog", name: "Nature Health", rss: "https://www.nature.com/naturehealth.rss" }],
       {
         delayMs: 0,
         retryCount: 0,
@@ -818,8 +857,8 @@ describe("normalizeFeedItem", () => {
 
     const papers = await fetchJournalFeeds(
       [
-        { name: "Nature Geoscience", rss: "https://www.nature.com/ngeo.rss" },
-        { name: "Science", rss: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" }
+        { kind: "catalog", name: "Nature Geoscience", rss: "https://www.nature.com/ngeo.rss" },
+        { kind: "catalog", name: "Science", rss: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" }
       ],
       { delayMs: 0, retryCount: 0, deferredRetryDelayMs: 0 }
     );
@@ -874,8 +913,8 @@ describe("normalizeFeedItem", () => {
 
     const papers = await fetchJournalFeeds(
       [
-        { name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
-        { name: "Science", rss: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" }
+        { kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
+        { kind: "catalog", name: "Science", rss: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" }
       ],
       { delayMs: 0, retryDelayMs: 0, deferredRetryDelayMs: 0 }
     );
@@ -924,8 +963,8 @@ describe("normalizeFeedItem", () => {
 
     await fetchJournalFeeds(
       [
-        { name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
-        { name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
+        { kind: "catalog", name: "AAAG", rss: "https://www.tandfonline.com/feed/rss/raag21" },
+        { kind: "catalog", name: "IJGIS", rss: "https://www.tandfonline.com/feed/rss/tgis20" }
       ],
       { retryCount: 0, deferredRetryDelayMs: 0, delayRangeMs: { minMs: 20, maxMs: 20 } }
     );
@@ -1075,6 +1114,7 @@ describe("normalizeFeedItem", () => {
     );
 
     const papers = await fetchJournalFeed({
+      kind: "custom",
       name: label,
       rss: `https://example.test/${encodeURIComponent(label)}.xml`
     });

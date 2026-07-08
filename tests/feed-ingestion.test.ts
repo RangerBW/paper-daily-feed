@@ -3,14 +3,14 @@ import type { AppConfig } from "../src/app-config.js";
 import { ingestFeedPapers } from "../src/feed-ingestion.js";
 
 const rssMock = vi.hoisted(() => ({
-  fetchJournalFeeds: vi.fn()
+  fetchFeedSources: vi.fn()
 }));
 
 vi.mock("../src/rss.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../src/rss.js")>();
   return {
     ...actual,
-    fetchJournalFeeds: rssMock.fetchJournalFeeds
+    fetchFeedSources: rssMock.fetchFeedSources
   };
 });
 
@@ -20,7 +20,7 @@ describe("ingestFeedPapers", () => {
   });
 
   it("resolves configured sources, fetches papers, and keeps recent papers", async () => {
-    rssMock.fetchJournalFeeds.mockResolvedValue([
+    rssMock.fetchFeedSources.mockResolvedValue([
       {
         journal: "Nature",
         title: "Recent",
@@ -62,11 +62,11 @@ describe("ingestFeedPapers", () => {
         7
       )
     ).rejects.toThrow("Unknown journal subscription(s): Unknown Journal");
-    expect(rssMock.fetchJournalFeeds).not.toHaveBeenCalled();
+    expect(rssMock.fetchFeedSources).not.toHaveBeenCalled();
   });
 
   it("uses only custom Feed Sources when the catalog is disabled", async () => {
-    rssMock.fetchJournalFeeds.mockResolvedValue([]);
+    rssMock.fetchFeedSources.mockResolvedValue([]);
 
     const result = await ingestFeedPapers(
       [{ name: "Nature", rss: "https://nature.example/rss" }],
@@ -84,7 +84,7 @@ describe("ingestFeedPapers", () => {
   });
 
   it("includes all catalog Feed Sources when no selections are configured", async () => {
-    rssMock.fetchJournalFeeds.mockResolvedValue([]);
+    rssMock.fetchFeedSources.mockResolvedValue([]);
     const catalog = [
       { name: "Nature", rss: "https://example.test/nature.rss" },
       { name: "Science", rss: "https://example.test/science.rss" }
@@ -96,7 +96,7 @@ describe("ingestFeedPapers", () => {
   });
 
   it("selects catalog Feed Sources by name or abbreviation", async () => {
-    rssMock.fetchJournalFeeds.mockResolvedValue([]);
+    rssMock.fetchFeedSources.mockResolvedValue([]);
     const catalog = [
       { name: "Science", rss: "https://example.test/science.rss" },
       {
@@ -116,7 +116,7 @@ describe("ingestFeedPapers", () => {
   });
 
   it("appends custom Feed Sources after selected catalog sources", async () => {
-    rssMock.fetchJournalFeeds.mockResolvedValue([]);
+    rssMock.fetchFeedSources.mockResolvedValue([]);
 
     const result = await ingestFeedPapers(
       [{ name: "Nature", rss: "https://example.test/nature.rss" }],

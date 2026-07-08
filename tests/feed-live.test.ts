@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import journals from "../data/journals.config.js";
-import { fetchJournalFeed } from "../src/rss.js";
+import { fetchFeedSource } from "../src/rss.js";
 import type { Journal } from "../src/types.js";
 
 type PublisherSmokeTarget = {
@@ -49,7 +49,12 @@ describeLive("live RSS smoke tests", () => {
 
       for (const target of targets) {
         const journal = findJournal(target.selection);
-        const papers = await fetchJournalFeed(journal);
+        const papers = await fetchFeedSource({
+          kind: "catalog",
+          name: journal.abbr ?? journal.name,
+          rss: journal.rss,
+          ...(journal.issn ? { issn: journal.issn } : {})
+        });
         const firstPaper = papers[0];
 
         expect(firstPaper, `${target.family} returned no valid papers`).toBeDefined();

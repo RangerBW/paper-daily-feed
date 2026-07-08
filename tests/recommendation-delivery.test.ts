@@ -42,8 +42,8 @@ describe("Recommendation Delivery", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("unavailable", { status: 503 })));
 
     const result = await deliverRecommendations([recommendation], "preview-email", config, {
-      version: 1,
-      delivered: []
+      filterUndeliveredPapers: (papers) => papers,
+      confirmSuccessfulDelivery: () => undefined
     });
 
     expect(result.sent).toBe(false);

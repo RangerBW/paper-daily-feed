@@ -2,21 +2,34 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import type { FeedPaper } from "./types.js";
 
-export const DELIVERY_HISTORY_PATH = ".delivery-history.json";
-export const DEFAULT_DELIVERY_HISTORY_SALT = "paper-daily-feed:v1:delivery-history";
+const DELIVERY_HISTORY_PATH = ".delivery-history.json";
+const DEFAULT_DELIVERY_HISTORY_SALT = "paper-daily-feed:v1:delivery-history";
 const DELIVERY_HISTORY_RETENTION_DAYS = 180;
 
-export type DeliveryHistoryEntry = {
+type DeliveryHistoryEntry = {
   fingerprint: string;
   deliveredAt: string;
 };
 
-export type DeliveryHistory = {
+type DeliveryHistory = {
   version: 1;
   delivered: DeliveryHistoryEntry[];
 };
 
 type Env = Record<string, string | undefined>;
+
+export type DeliveryHistorySession = {
+  filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(papers: T[]): T[];
+  confirmSuccessfulDelivery(
+    papers: Pick<FeedPaper, "title" | "url">[],
+    deliveredAt?: Date
+  ): void;
+};
+
+type OpenDeliveryHistoryOptions = {
+  path?: string;
+  env?: Env;
+};
 
 function emptyHistory(): DeliveryHistory {
   return { version: 1, delivered: [] };
@@ -64,13 +77,13 @@ function isValidEntry(value: unknown): value is DeliveryHistoryEntry {
   );
 }
 
-export function createPaperFingerprint(paper: Pick<FeedPaper, "title" | "url">, env: Env = process.env): string {
+function createPaperFingerprint(paper: Pick<FeedPaper, "title" | "url">, env: Env = process.env): string {
   return createHash("sha256")
     .update(`${historySalt(env)}::${normalizeUrl(paper.url)}::${normalizeTitle(paper.title)}`)
     .digest("hex");
 }
 
-export function loadDeliveryHistory(path = DELIVERY_HISTORY_PATH): DeliveryHistory {
+function loadDeliveryHistory(path = DELIVERY_HISTORY_PATH): DeliveryHistory {
   if (!existsSync(path)) {
     return emptyHistory();
   }
@@ -84,11 +97,11 @@ export function loadDeliveryHistory(path = DELIVERY_HISTORY_PATH): DeliveryHisto
   }
 }
 
-export function saveDeliveryHistory(path: string, history: DeliveryHistory): void {
+function saveDeliveryHistory(path: string, history: DeliveryHistory): void {
   writeFileSync(path, `${JSON.stringify(history, null, 2)}\n`);
 }
 
-export function filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(
+function filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(
   papers: T[],
   history: DeliveryHistory,
   env: Env = process.env
@@ -97,7 +110,7 @@ export function filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url
   return papers.filter((paper) => !delivered.has(createPaperFingerprint(paper, env)));
 }
 
-export function recordDeliveredPapers(
+function recordDeliveredPapers(
   history: DeliveryHistory,
   papers: Pick<FeedPaper, "title" | "url">[],
   deliveredAt: Date,
@@ -116,4 +129,29 @@ export function recordDeliveredPapers(
   }
 
   return { version: 1, delivered: records };
+}
+
+export function openDeliveryHistory(options: OpenDeliveryHistoryOptions = {}): DeliveryHistorySession {
+  const path = options.path ?? DELIVERY_HISTORY_PATH;
+  const env = options.env ?? process.env;
+  let history = loadDeliveryHistory(path);
+
+  return {
+    filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(papers: T[]): T[] {
+      return filterUndeliveredPapers(papers, history, env);
+    },
+    confirmSuccessfulDelivery(
+      papers: Pick<FeedPaper, "title" | "url">[],
+      deliveredAt = new Date()
+    ): void {
+      const updated = recordDeliveredPapers(history, papers, deliveredAt, env);
+      try {
+        saveDeliveryHistory(path, updated);
+        history = updated;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Delivery may have succeeded, but Delivery History could not be saved: ${message}`);
+      }
+    }
+  };
 }
