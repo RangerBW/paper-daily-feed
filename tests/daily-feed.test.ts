@@ -9,10 +9,15 @@ const feedMock = vi.hoisted(() => ({
   fetchRecentFeedPapers: vi.fn()
 }));
 const matchingMock = vi.hoisted(() => ({
-  rankPapers: vi.fn()
+  rankPapers: vi.fn(),
+  resolveMatchingProvider: vi.fn(() => ({
+    active: "api",
+    model: "text-embedding-test",
+    label: "API embeddings"
+  }))
 }));
 const metadataEnrichmentMock = vi.hoisted(() => ({
-  enrichFeedPapers: vi.fn()
+  enrichFeedPaperMetadata: vi.fn()
 }));
 const metadataRepairMock = vi.hoisted(() => ({
   repairRecommendationMetadata: vi.fn()
@@ -31,8 +36,10 @@ const historyMock = vi.hoisted(() => ({
 vi.mock("../src/interest-corpus.js", () => corpusMock);
 vi.mock("../src/feed-ingestion.js", () => feedMock);
 vi.mock("../src/matching.js", () => matchingMock);
-vi.mock("../src/metadata-enrichment.js", () => metadataEnrichmentMock);
-vi.mock("../src/metadata-repair.js", () => metadataRepairMock);
+vi.mock("../src/paper-metadata.js", () => ({
+  ...metadataEnrichmentMock,
+  ...metadataRepairMock
+}));
 vi.mock("../src/email.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../src/email.js")>();
   return {
@@ -159,7 +166,7 @@ describe("runDailyFeed delivery history", () => {
     });
     corpusMock.buildInterestCorpus.mockResolvedValue([interest]);
     feedMock.fetchRecentFeedPapers.mockResolvedValue([paper("Delivered"), paper("Fresh")]);
-    metadataEnrichmentMock.enrichFeedPapers.mockImplementation(async (papers) =>
+    metadataEnrichmentMock.enrichFeedPaperMetadata.mockImplementation(async (papers) =>
       papers.map((candidate: FeedPaper) => ({ ...candidate, abstract: `Enriched ${candidate.abstract}` }))
     );
     matchingMock.rankPapers.mockResolvedValue([recommended("Fresh")]);
@@ -176,7 +183,7 @@ describe("runDailyFeed delivery history", () => {
       { version: 1, delivered: [] },
       {}
     );
-    expect(metadataEnrichmentMock.enrichFeedPapers).toHaveBeenCalledWith(
+    expect(metadataEnrichmentMock.enrichFeedPaperMetadata).toHaveBeenCalledWith(
       [paper("Fresh")],
       config().metadataEnrichment
     );

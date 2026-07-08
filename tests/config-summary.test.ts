@@ -61,4 +61,16 @@ describe("config summary", () => {
     expect(output).not.toContain("mail-secret");
   });
 
+  it("reports the actual local adapter and fallback reason", () => {
+    const config = loadAppConfig(
+      { EMBEDDING_API_KEY: "embedding-secret" },
+      json({ matching: { provider: "api", api: { baseUrl: "" } } })
+    );
+
+    const output = configSummaryLines(config).join("\n");
+
+    expect(output).toContain("active=local");
+    expect(output).toContain("fallback=missing-api-base-url");
+  });
+
 });

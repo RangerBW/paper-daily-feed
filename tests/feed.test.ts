@@ -662,7 +662,7 @@ describe("normalizeFeedItem", () => {
     expect(papers).toHaveLength(1);
   });
 
-  it("logs persistent publisher blocks as zero-paper feeds instead of errors", async () => {
+  it("fails when the only Feed Source remains blocked", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     vi.stubGlobal(
       "fetch",
@@ -674,16 +674,17 @@ describe("normalizeFeedItem", () => {
       })
     );
 
-    const papers = await fetchJournalFeeds([{ name: "Nature Geoscience", rss: "https://www.nature.com/ngeo.rss" }], {
-      delayMs: 0,
-      retryCount: 1,
-      retryDelayMs: 0,
-      deferredRetryDelayMs: 0,
-      curlFallback: false
-    });
+    await expect(
+      fetchJournalFeeds([{ name: "Nature Geoscience", rss: "https://www.nature.com/ngeo.rss" }], {
+        delayMs: 0,
+        retryCount: 1,
+        retryDelayMs: 0,
+        deferredRetryDelayMs: 0,
+        curlFallback: false
+      })
+    ).rejects.toThrow("All 1 configured Feed Sources failed");
 
     const logs = logSpy.mock.calls.flat().join("\n");
-    expect(papers).toHaveLength(0);
     expect(logs).toContain("[Springer] Nature Geoscience: 0 papers (publisher returned non-RSS response)");
     expect(logs).not.toContain("failed: Error");
   });

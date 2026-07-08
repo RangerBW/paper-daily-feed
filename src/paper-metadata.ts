@@ -1,5 +1,10 @@
-import type { MetadataRepairConfig } from "./app-config.js";
-import type { RecommendedPaper } from "./types.js";
+import type { MetadataEnrichmentConfig, MetadataRepairConfig } from "./app-config.js";
+import { fetchCrossrefWork, findDoi, type CrossrefMetadata } from "./crossref.js";
+import type { FeedPaper, RecommendedPaper } from "./types.js";
+
+type EnrichmentDependencies = {
+  fetchCrossref?: (doi: string) => Promise<CrossrefMetadata | null>;
+};
 
 type NerEntity = {
   entity?: string;
@@ -13,6 +18,61 @@ type LoadNerPipeline = (model: string) => Promise<NerPipeline>;
 const ORG_WORDS =
   /\b(?:University|Department|School|Institute|Laboratory|Centre|Center|Research|College|Faculty|Business)\b/i;
 
+function paperDoi(paper: FeedPaper): string | undefined {
+  return paper.doi ?? findDoi([paper.url, paper.metadataText, paper.title].filter(Boolean).join(" "));
+}
+
+function meaningfulAbstract(value: string | undefined): value is string {
+  return Boolean(value && /[A-Za-z0-9]/.test(value) && value.replace(/\W/g, "").length >= 20);
+}
+
+function mergeCrossrefMetadata(paper: FeedPaper, metadata: CrossrefMetadata): FeedPaper {
+  return {
+    ...paper,
+    doi: metadata.doi,
+    title: metadata.title ?? paper.title,
+    journal: metadata.journal ?? paper.journal,
+    abstract: meaningfulAbstract(metadata.abstract) ? metadata.abstract : paper.abstract,
+    publishedAt: metadata.publishedAt ?? paper.publishedAt,
+    ...(metadata.authors?.length ? { authors: metadata.authors } : {})
+  };
+}
+
+/** Applies inexpensive metadata precedence before matching. */
+export async function enrichFeedPaperMetadata(
+  papers: FeedPaper[],
+  config: MetadataEnrichmentConfig,
+  dependencies: EnrichmentDependencies = {}
+): Promise<FeedPaper[]> {
+  if (!config.enabled || !config.crossref.enabled || papers.length === 0) return papers;
+
+  const fetchCrossref =
+    dependencies.fetchCrossref ?? ((doi: string) => fetchCrossrefWork(doi, { mailto: config.crossref.mailto }));
+  const enriched: FeedPaper[] = [];
+  let repaired = 0;
+  for (const paper of papers) {
+    const doi = paperDoi(paper);
+    if (!doi) {
+      enriched.push(paper);
+      continue;
+    }
+    try {
+      const metadata = await fetchCrossref(doi);
+      if (metadata) {
+        enriched.push(mergeCrossrefMetadata(paper, metadata));
+        repaired += 1;
+      } else {
+        enriched.push(paper);
+      }
+    } catch (error) {
+      console.log(`[paper-metadata] Crossref skipped for ${doi}: ${error instanceof Error ? error.message : String(error)}`);
+      enriched.push(paper);
+    }
+  }
+  console.log(`[paper-metadata] Crossref enriched ${repaired}/${papers.length} papers`);
+  return enriched;
+}
+
 function compact(value: string): string {
   return value.replace(/^##/, "").replace(/\s+/g, " ").trim();
 }
@@ -24,14 +84,12 @@ function entityKind(entity: NerEntity): string {
 function groups(entities: NerEntity[], kind: "PER" | "ORG"): string[] {
   const values: string[] = [];
   let current = "";
-
   for (const entity of entities) {
     if (entityKind(entity) !== kind || !entity.word) {
       if (current) values.push(current);
       current = "";
       continue;
     }
-
     const word = compact(entity.word);
     if (!word) continue;
     const startsGroup = entity.entity?.startsWith("B-") || Boolean(entity.entity_group && !entity.entity);
@@ -42,7 +100,6 @@ function groups(entities: NerEntity[], kind: "PER" | "ORG"): string[] {
       current = current ? `${current} ${word}` : word;
     }
   }
-
   if (current) values.push(current);
   return values.map(compact).filter(Boolean);
 }
@@ -60,7 +117,7 @@ function shouldUseAffiliation(affiliation: string | undefined, current: string |
   return Boolean(affiliation && ORG_WORDS.test(affiliation) && affiliation.length > Math.max(12, current?.length ?? 0));
 }
 
-function metadataText(paper: RecommendedPaper): string {
+function rawMetadata(paper: RecommendedPaper): string {
   return paper.metadataText || [paper.authors?.join(", "), paper.firstAffiliation].filter(Boolean).join(" ");
 }
 
@@ -76,62 +133,51 @@ function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
   });
 }
 
-async function repair(
+async function repairSelectedMetadata(
   recommendations: RecommendedPaper[],
   loadNerPipeline: LoadNerPipeline,
   model: string
 ): Promise<RecommendedPaper[]> {
-  console.log(`[metadata-repair] loading NER model ${model}`);
+  console.log(`[paper-metadata] loading NER model ${model}`);
   const ner = await loadNerPipeline(model);
-  console.log(`[metadata-repair] loaded NER model; repairing ${recommendations.length} recommendations`);
   const repaired: RecommendedPaper[] = [];
   let repairedAuthors = 0;
   let repairedAffiliations = 0;
-
   for (const paper of recommendations) {
-    const entities = await ner(metadataText(paper));
+    const entities = await ner(rawMetadata(paper));
     const authors = groups(entities, "PER");
     const affiliation = groups(entities, "ORG")
       .sort((left, right) => right.length - left.length)
       .find((value) => shouldUseAffiliation(value, paper.firstAffiliation));
     const useAuthors = shouldUseAuthors(authors, paper.authors);
-    if (useAuthors) {
-      repairedAuthors += 1;
-    }
-    if (affiliation) {
-      repairedAffiliations += 1;
-    }
-    if (useAuthors || affiliation) {
-      console.log(
-        `[metadata-repair] repaired "${paper.title}": authors="${(useAuthors ? authors : paper.authors ?? []).join(", ")}"; firstAffiliation="${affiliation ?? paper.firstAffiliation ?? ""}"`
-      );
-    }
+    if (useAuthors) repairedAuthors += 1;
+    if (affiliation) repairedAffiliations += 1;
     repaired.push({
       ...paper,
       ...(useAuthors ? { authors } : {}),
       ...(affiliation ? { firstAffiliation: affiliation } : {})
     });
   }
-
   console.log(
-    `[metadata-repair] done; authors repaired for ${repairedAuthors}/${recommendations.length}, affiliations repaired for ${repairedAffiliations}/${recommendations.length}`
+    `[paper-metadata] NER repaired authors for ${repairedAuthors}/${recommendations.length}, affiliations for ${repairedAffiliations}/${recommendations.length}`
   );
   return repaired;
 }
 
+/** Applies expensive NER repair only after Recommendations have been selected. */
 export async function repairRecommendationMetadata(
   recommendations: RecommendedPaper[],
   config: MetadataRepairConfig,
   loadNerPipeline: LoadNerPipeline = defaultLoadNerPipeline
 ): Promise<RecommendedPaper[]> {
-  if (!config.enabled || recommendations.length === 0) {
-    return recommendations;
-  }
-
+  if (!config.enabled || recommendations.length === 0) return recommendations;
   try {
-    return await withTimeout(repair(recommendations, loadNerPipeline, config.model), config.timeoutMs);
+    return await withTimeout(
+      repairSelectedMetadata(recommendations, loadNerPipeline, config.model),
+      config.timeoutMs
+    );
   } catch (error) {
-    console.log(`[metadata-repair] skipped: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(`[paper-metadata] NER skipped: ${error instanceof Error ? error.message : String(error)}`);
     return recommendations;
   }
 }

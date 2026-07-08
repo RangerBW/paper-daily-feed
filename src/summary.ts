@@ -55,9 +55,20 @@ export async function summarizeRecommendedPapers(
   const summarized: RecommendedPaper[] = [];
 
   for (const paper of papers) {
+    let tldr: string;
+    try {
+      tldr = await summarizePaper(paper);
+    } catch (error) {
+      console.log(
+        `[summary] generation failed for "${paper.title}"; using original abstract: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+      tldr = paper.abstract;
+    }
     summarized.push({
       ...paper,
-      tldr: await summarizePaper(paper)
+      tldr
     });
   }
 

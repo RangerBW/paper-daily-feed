@@ -1,8 +1,49 @@
 import type { MatchingConfig } from "./app-config.js";
-import { createEmbedder, type EmbedTexts } from "./embeddings.js";
+import {
+  createLocalEmbedder,
+  createOpenAICompatibleEmbedder,
+  type EmbedTexts
+} from "./embeddings.js";
 import type { FeedPaper, InterestDocument, MatchContext, RecommendedPaper } from "./types.js";
 
-export { createEmbedder, createLocalEmbedder, createOpenAICompatibleEmbedder, type EmbedTexts } from "./embeddings.js";
+export { createLocalEmbedder, createOpenAICompatibleEmbedder, type EmbedTexts } from "./embeddings.js";
+
+export type MatchingProviderResolution = {
+  active: "api" | "local";
+  model: string;
+  label: string;
+  fallbackReason?: "missing-api-key" | "missing-api-base-url";
+};
+
+export function resolveMatchingProvider(config: MatchingConfig): MatchingProviderResolution {
+  if (config.provider === "local") {
+    return { active: "local", model: config.local.model, label: "local embeddings" };
+  }
+  if (!config.api.apiKey.trim()) {
+    return {
+      active: "local",
+      model: config.local.model,
+      label: "local embeddings",
+      fallbackReason: "missing-api-key"
+    };
+  }
+  if (!config.api.baseUrl.trim()) {
+    return {
+      active: "local",
+      model: config.local.model,
+      label: "local embeddings",
+      fallbackReason: "missing-api-base-url"
+    };
+  }
+  return { active: "api", model: config.api.model, label: "API embeddings" };
+}
+
+export async function createEmbedder(config: MatchingConfig): Promise<EmbedTexts> {
+  const provider = resolveMatchingProvider(config);
+  return provider.active === "api"
+    ? createOpenAICompatibleEmbedder(config.api, config.api.apiKey.trim())
+    : createLocalEmbedder(config.local);
+}
 
 function paperText(paper: Pick<FeedPaper, "title" | "abstract">): string {
   return `${paper.title}\n\n${paper.abstract}`;
@@ -238,7 +279,7 @@ export async function rankPapers(
     return [];
   }
 
-  const embedTexts = embedTextsMock ?? (await createEmbedder(config, env));
+  const embedTexts = embedTextsMock ?? (await createEmbedder(config));
   const candidateTexts = uniqueCandidates.map((candidate) => paperText(candidate));
   const interestTexts = interests.map((interest) => interestText(interest));
   const embeddings = await embedTexts([...candidateTexts, ...interestTexts]);

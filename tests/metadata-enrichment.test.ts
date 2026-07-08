@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { enrichFeedPapers } from "../src/metadata-enrichment.js";
+import { enrichFeedPaperMetadata } from "../src/paper-metadata.js";
 import type { FeedPaper } from "../src/types.js";
 
 function paper(overrides: Partial<FeedPaper> = {}): FeedPaper {
@@ -25,7 +25,7 @@ describe("metadata enrichment", () => {
       url: "https://doi.org/10.1080/24694452.2025.2592754"
     }));
 
-    const enriched = await enrichFeedPapers(
+    const enriched = await enrichFeedPaperMetadata(
       [paper()],
       { enabled: true, crossref: { enabled: true, mailto: "" } },
       { fetchCrossref }
@@ -48,7 +48,7 @@ describe("metadata enrichment", () => {
   it("leaves RSS metadata unchanged when no DOI is available", async () => {
     const fetchCrossref = vi.fn();
 
-    const enriched = await enrichFeedPapers(
+    const enriched = await enrichFeedPaperMetadata(
       [paper({ url: "https://example.test/no-doi" })],
       { enabled: true, crossref: { enabled: true, mailto: "" } },
       { fetchCrossref }
@@ -64,7 +64,7 @@ describe("metadata enrichment", () => {
       abstract: "."
     }));
 
-    const enriched = await enrichFeedPapers(
+    const enriched = await enrichFeedPaperMetadata(
       [paper({ abstract: "RSS abstract with useful text." })],
       { enabled: true, crossref: { enabled: true, mailto: "" } },
       { fetchCrossref }

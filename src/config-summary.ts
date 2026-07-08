@@ -1,4 +1,5 @@
 import type { AppConfig } from "./app-config.js";
+import { resolveMatchingProvider } from "./matching.js";
 
 function enabledInterestSources(config: AppConfig): string {
   const sources = [
@@ -9,22 +10,15 @@ function enabledInterestSources(config: AppConfig): string {
   return sources.length > 0 ? sources.join(", ") : "none";
 }
 
-function activeMatchingModel(config: AppConfig): { active: "api" | "local"; model: string } {
-  if (config.matching.provider === "api" && config.matching.api.apiKey.trim()) {
-    return { active: "api", model: config.matching.api.model };
-  }
-
-  return { active: "local", model: config.matching.local.model };
-}
-
 export function configSummaryLines(config: AppConfig): string[] {
-  const matching = activeMatchingModel(config);
+  const matching = resolveMatchingProvider(config.matching);
+  const fallback = matching.fallbackReason ? `, fallback=${matching.fallbackReason}` : "";
 
   return [
     "Config summary:",
     `- interests: ${enabledInterestSources(config)}`,
     `- feeds: catalog=${config.feeds.includeCatalog === false ? "disabled" : config.feeds.catalogSelections.length || "all"}, customRss=${config.feeds.customRss.length}`,
-    `- matching: provider=${config.matching.provider}, active=${matching.active}, model=${matching.model}, paperLimit=${config.matching.paperLimit}, minScore=${config.matching.minScore}, maxPaperAgeDays=${config.matching.maxPaperAgeDays}, clusterSimilarityThreshold=${config.matching.clusterSimilarityThreshold}, avoidPenaltyWeight=${config.matching.avoidPenaltyWeight}`,
+    `- matching: provider=${config.matching.provider}, active=${matching.active}, model=${matching.model}${fallback}, paperLimit=${config.matching.paperLimit}, minScore=${config.matching.minScore}, maxPaperAgeDays=${config.matching.maxPaperAgeDays}, clusterSimilarityThreshold=${config.matching.clusterSimilarityThreshold}, avoidPenaltyWeight=${config.matching.avoidPenaltyWeight}`,
     `- metadataRepair: enabled=${config.metadataRepair.enabled}, model=${config.metadataRepair.model}, timeoutMs=${config.metadataRepair.timeoutMs}`,
     `- metadataEnrichment: enabled=${config.metadataEnrichment.enabled}, crossref=${config.metadataEnrichment.crossref.enabled}`,
     `- summary: enabled=${config.summary.enabled}, model=${config.summary.model}, language=${config.summary.language}`,

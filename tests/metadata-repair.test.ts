@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { repairRecommendationMetadata } from "../src/metadata-repair.js";
+import { repairRecommendationMetadata } from "../src/paper-metadata.js";
 import type { MetadataRepairConfig } from "../src/app-config.js";
 import type { RecommendedPaper } from "../src/types.js";
 
@@ -89,8 +89,8 @@ describe("repairRecommendationMetadata", () => {
       )
     ).resolves.toEqual(recommendations);
 
-    expect(logSpy.mock.calls.flat().join("\n")).toContain("[metadata-repair] skipped: model unavailable");
-    expect(logSpy.mock.calls.flat().join("\n")).toContain("[metadata-repair] skipped: metadata repair timeout");
+    expect(logSpy.mock.calls.flat().join("\n")).toContain("[paper-metadata] NER skipped: model unavailable");
+    expect(logSpy.mock.calls.flat().join("\n")).toContain("[paper-metadata] NER skipped: metadata repair timeout");
   });
 
   it("logs metadata repair progress and counts", async () => {
@@ -117,12 +117,9 @@ describe("repairRecommendationMetadata", () => {
       { entity: "I-ORG", word: "University" }
     ]);
 
-    expect(logSpy.mock.calls.flat().join("\n")).toContain("[metadata-repair] loading NER model ner-test");
+    expect(logSpy.mock.calls.flat().join("\n")).toContain("[paper-metadata] loading NER model ner-test");
     expect(logSpy.mock.calls.flat().join("\n")).toContain(
-      "[metadata-repair] done; authors repaired for 1/1, affiliations repaired for 1/1"
-    );
-    expect(logSpy.mock.calls.flat().join("\n")).toContain(
-      '[metadata-repair] repaired "AI Urbanism": authors="Jun Zhang, Andrew Cox, Jing Wang"; firstAffiliation="School of Information University"'
+      "[paper-metadata] NER repaired authors for 1/1, affiliations for 1/1"
     );
   });
 });

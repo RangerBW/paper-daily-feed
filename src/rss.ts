@@ -703,6 +703,7 @@ export async function fetchJournalFeeds(
   const curlFetcher = options.curlFetcher ?? fetchJournalFeedWithCurl;
   const crossrefFetcher = options.crossrefFetcher ?? fetchCrossrefJournalWorks;
   const papers: FeedPaper[] = [];
+  let succeededSourceCount = 0;
   const scheduledJournals = interleaveFeedsByPublisher(journals);
   const deferred: Array<{ journal: FetchableFeed; error: unknown }> = [];
 
@@ -716,6 +717,7 @@ export async function fetchJournalFeeds(
       deferPublisherBlocks: scheduledJournals.length > 1
     });
     if (result.status === "fulfilled") {
+      succeededSourceCount += 1;
       papers.push(...result.papers);
       progress.step(`${logLabel}: ${result.papers.length} papers`);
       continue;
@@ -741,6 +743,7 @@ export async function fetchJournalFeeds(
     const logLabel = feedLogLabel(journal);
     const result = await fetchJournalFeedWithRetries(journal, 0, retryDelayMs, { startProfileIndex: 1 });
     if (result.status === "fulfilled") {
+      succeededSourceCount += 1;
       papers.push(...result.papers);
       progress.step(`${logLabel}: ${result.papers.length} papers`);
       continue;
@@ -749,6 +752,7 @@ export async function fetchJournalFeeds(
     if (curlFallbackEnabled && publisherBlockReason(result.error)) {
       try {
         const fallbackPapers = await curlFetcher(journal);
+        succeededSourceCount += 1;
         papers.push(...fallbackPapers);
         progress.step(`${logLabel}: ${fallbackPapers.length} papers (curl fallback)`);
         continue;
@@ -771,6 +775,7 @@ export async function fetchJournalFeeds(
               ...(work.authors?.length ? { authors: work.authors } : {})
             }));
           if (fallbackPapers.length > 0) {
+            succeededSourceCount += 1;
             papers.push(...fallbackPapers);
             progress.step(`${logLabel}: ${fallbackPapers.length} papers (Crossref fallback)`);
             continue;
@@ -785,10 +790,9 @@ export async function fetchJournalFeeds(
     progress.step(blockReason ? `${logLabel}: 0 papers (${blockReason})` : `${logLabel} failed: ${String(result.error)}`);
   }
 
-  return papers;
-}
+  if (journals.length > 0 && succeededSourceCount === 0) {
+    throw new Error(`All ${journals.length} configured Feed Sources failed.`);
+  }
 
-export function filterRecentPapers(papers: FeedPaper[], maxAgeDays: number, now = new Date()): FeedPaper[] {
-  const oldest = now.getTime() - maxAgeDays * 24 * 60 * 60 * 1000;
-  return papers.filter((paper) => paper.publishedAt === null || paper.publishedAt.getTime() >= oldest);
+  return papers;
 }
