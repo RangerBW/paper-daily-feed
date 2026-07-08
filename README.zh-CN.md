@@ -45,7 +45,7 @@
 粘贴以下指令：
 
 ```text
-请按照该仓库中的 docs/agent-deployment.zh-CN.md，将 https://github.com/nehSgnaiL/paper-daily-feed 部署到我的 GitHub Actions。
+请按照项目仓库(https://github.com/nehSgnaiL/paper-daily-feed)中的docs/agent-deployment.zh-CN.md，为我部署每日论文智能推送。
 ```
 
 ---

@@ -45,7 +45,7 @@
 Paste this instruction:
 
 ```text
-Deploy https://github.com/nehSgnaiL/paper-daily-feed to my GitHub Actions. Follow docs/agent-deployment.md from that repository.
+Follow docs/agent-deployment.md in the project repository (https://github.com/nehSgnaiL/paper-daily-feed) to set up smart daily paper delivery for me.
 ```
 
 ---

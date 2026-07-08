@@ -4,6 +4,10 @@
 
 > These instructions are for AI coding agents. Complete the setup for the user instead of merely explaining how to do it.
 
+## Deployment target
+
+Deploy the project as a fork under the user's own GitHub account. Configure, enable, and verify GitHub Actions in that fork with the required permissions. Never deploy to the canonical repository or the Agent's own account.
+
 ## Follow the project guide
 
 - Read and follow `@README.md` from beginning to end, especially **Get started**.
