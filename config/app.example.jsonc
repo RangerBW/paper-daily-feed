@@ -59,6 +59,9 @@
   },
   "feeds": {
     // Can skip the whole feeds section to use all bundled catalog feeds.
+    // Can skip. false disables every bundled feed in data/journals.config.ts (useful for other disciplines using custom RSS feeds only).
+    // Empty/omitted: true.
+    "includeCatalog": true,
     // Can skip. Feed catalog names or abbreviations from data/journals.config.ts.
     // Empty: use all bundled catalog feeds.
     "catalogSelections": ["Nature", "Science", "Nature Cities"],

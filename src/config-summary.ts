@@ -23,7 +23,7 @@ export function configSummaryLines(config: AppConfig): string[] {
   return [
     "Config summary:",
     `- interests: ${enabledInterestSources(config)}`,
-    `- feeds: catalog=${config.feeds.catalogSelections.length || "all"}, customRss=${config.feeds.customRss.length}`,
+    `- feeds: catalog=${config.feeds.includeCatalog === false ? "disabled" : config.feeds.catalogSelections.length || "all"}, customRss=${config.feeds.customRss.length}`,
     `- matching: provider=${config.matching.provider}, active=${matching.active}, model=${matching.model}, paperLimit=${config.matching.paperLimit}, minScore=${config.matching.minScore}, maxPaperAgeDays=${config.matching.maxPaperAgeDays}, clusterSimilarityThreshold=${config.matching.clusterSimilarityThreshold}, avoidPenaltyWeight=${config.matching.avoidPenaltyWeight}`,
     `- metadataRepair: enabled=${config.metadataRepair.enabled}, model=${config.metadataRepair.model}, timeoutMs=${config.metadataRepair.timeoutMs}`,
     `- metadataEnrichment: enabled=${config.metadataEnrichment.enabled}, crossref=${config.metadataEnrichment.crossref.enabled}`,

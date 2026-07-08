@@ -6,6 +6,7 @@ export type AppConfig = {
     zotero: ZoteroInterestConfig;
   };
   feeds: {
+    includeCatalog?: boolean;
     catalogSelections: string[];
     customRss: CustomRssFeedConfig[];
   };
@@ -406,6 +407,7 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
       }
     },
     feeds: {
+      includeCatalog: asBoolean(feeds.includeCatalog, true),
       catalogSelections: asStringArray(feeds.catalogSelections, []),
       customRss: asCustomRssFeeds(feeds.customRss)
     },

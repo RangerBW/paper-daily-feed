@@ -14,7 +14,10 @@
 ## Work with the user
 
 - Use the user's preferred language throughout. Ask one simple question at a time and explain what is needed.
-- Ask whether the user wants Zotero and AI summaries before requesting those details.
+- Start by asking which discipline the user works in. Based on the answer, offer a few relevant directions and narrow down their research field one simple question at a time.
+- Once the research field is clear, ask which journals they follow or want to receive, and use those answers to choose the paper sources.
+- The bundled journals mainly cover geography. For other disciplines, subscribe only to journals the user chooses and do not mix in geography journals. If the user has no journals in mind, help them clarify their preferences without broadening the subscription on their behalf.
+- After confirming discipline, field, and journals, ask whether the user wants Zotero and AI summaries before requesting those details.
 - The user should only provide choices and configuration details, and approve GitHub sign-in when required. Handle all other pages, commands, saving, and checks for them.
 - Prefer `gh` and complete as much as possible in the current conversation and terminal to minimize page switching.
 - Confirm the GitHub account and target fork before making changes. Reuse an existing fork when possible and never change the canonical repository.
@@ -26,7 +29,9 @@ Complete these items in order and check each one:
 - [ ] **Prepare GitHub:** Check whether `gh` is available and install it when possible if missing. Check the login; if needed, start the web login and have the user only approve it on GitHub. Confirm the signed-in account.
 - [ ] **Prepare the fork:** Find the user's existing fork or create it for them. Confirm that it belongs to the user and that the current account can manage it.
 - [ ] **Collect email settings:** Ask in turn for the receiving address, sending address, SMTP server, and port. When the sender password, app password, or authorization code is needed, open secure input rather than asking for it in chat.
-- [ ] **Choose interest sources:** Help the user write a short research-interest summary. Ask whether they use Zotero; if so, collect `ZOTERO_ID` and a read-only `ZOTERO_KEY`.
+- [ ] **Choose discipline and field:** Ask for the discipline first, then offer broad field choices and narrow them progressively. Use the result to write a short research-interest summary.
+- [ ] **Choose journals:** Ask which journals the user follows and add them to `interests.profile.favoriteJournals`. For geography, select matching entries from `data/journals.config.ts` in `feeds.catalogSelections`. For other disciplines, default to `feeds.includeCatalog: false` and add available RSS feeds to `feeds.customRss`. Do not use an empty `catalogSelections` to mean “no bundled journals”; it means all bundled journals.
+- [ ] **Choose interest sources:** Ask whether they use Zotero; if so, collect `ZOTERO_ID` and a read-only `ZOTERO_KEY`.
 - [ ] **Choose summary style:** Ask whether to create AI-generated TLDRs. If enabled, confirm the API URL, API key, model, and output language. Otherwise use the paper's original abstract.
 - [ ] **Save Secrets:** Save the required `RECEIVER`, `SENDER`, `SENDER_PASSWORD`, `SMTP_SERVER`, and `SMTP_PORT` in the target fork, plus `ZOTERO_ID`, `ZOTERO_KEY`, `OPENAI_BASE_URL`, and `OPENAI_API_KEY` for enabled features.
 - [ ] **Save app settings:** Build the smallest useful configuration from the user's choices. Show the non-secret contents for confirmation, then save it as the Actions variable `APP_CONFIG`. Include at least the research interests, Zotero and summary on/off choices, summary language, paper limit, minimum score, and feed sources.

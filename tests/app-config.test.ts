@@ -253,6 +253,7 @@ describe("loadAppConfig", () => {
         }
       },
       feeds: {
+        includeCatalog: true,
         catalogSelections: [],
         customRss: []
       },

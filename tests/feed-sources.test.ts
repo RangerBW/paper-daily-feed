@@ -39,6 +39,10 @@ describe("resolveFeedSources", () => {
     ]);
   });
 
+  it("excludes the bundled catalog when it is disabled", () => {
+    expect(resolveFeedSources(catalog, feedsConfig({ includeCatalog: false }))).toEqual([]);
+  });
+
   it("appends custom RSS entries after catalog sources", () => {
     expect(
       resolveFeedSources(
