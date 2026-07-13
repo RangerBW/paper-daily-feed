@@ -11,11 +11,12 @@ describe("parseCliMode", () => {
     expect(parseCliMode(["preview-email"])).toBe("preview-email");
     expect(parseCliMode(["setup-profile"])).toBe("setup-profile");
     expect(parseCliMode(["test-config"])).toBe("test-config");
+    expect(parseCliMode(["notify-maintenance"])).toBe("notify-maintenance");
   });
 
   it("throws a clear error for unknown modes", () => {
     expect(() => parseCliMode(["preview"])).toThrow(
-      "Unknown CLI mode: preview. Expected one of: run, preview-email, setup-profile, test-config."
+      "Unknown CLI mode: preview. Expected one of: run, preview-email, setup-profile, test-config, notify-maintenance."
     );
   });
 });

@@ -176,6 +176,7 @@ GitHub 默认暂停 fork 仓库中的工作流。启用它们：
 > - **自动更新：**
 > [maintenance workflow](../../actions/workflows/maintenance.yml) 会每周保持推送可用并拉取更新。
 > 若也想同步工作流文件，请创建仅限你的 fork 的 [fine-grained token](https://github.com/settings/personal-access-tokens)，授予 **Contents** 和 **Workflows** 读写权限，再保存为 Actions secret：`MAINTENANCE_SYNC_TOKEN`。
+> 如果更新需要手动操作，工作流会向 `RECEIVER` 发送一封英中双语邮件，其中包含准确步骤和 GitHub 链接。更新成功或没有新版本时不会发送维护邮件。
 
 <details close>
   <summary>自定义说明</summary>

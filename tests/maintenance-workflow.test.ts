@@ -21,4 +21,25 @@ describe("maintenance workflow guidance", () => {
     expect(workflow).toContain("git rebase upstream/main");
     expect(workflow).toContain("with your custom commits replayed on top");
   });
+
+  it("emails actionable guidance only when a sync needs manual action", () => {
+    const workflow = readFileSync(".github/workflows/maintenance.yml", "utf8");
+
+    expect(workflow).toContain("id: sync");
+    expect(workflow).toContain('set_manual_action "workflow-permission"');
+    expect(workflow).toContain('set_manual_action "rebase-conflict"');
+    expect(workflow).toContain('set_manual_action "push-failed"');
+    expect(workflow).toContain("npm start -- notify-maintenance");
+    expect(workflow).toContain("steps.sync.outputs.manual_reason != ''");
+    expect(workflow).toContain("MAINTENANCE_REASON:");
+    expect(workflow).toContain("RECEIVER: ${{ secrets.RECEIVER }}");
+  });
+
+  it("supports an explicit maintenance email test without pretending sync failed", () => {
+    const workflow = readFileSync(".github/workflows/maintenance.yml", "utf8");
+
+    expect(workflow).toContain("send_test_notification:");
+    expect(workflow).toContain("manual_reason=test");
+    expect(workflow).toContain("github.repository != 'nehSgnaiL/paper-daily-feed' && !inputs.send_test_notification");
+  });
 });

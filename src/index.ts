@@ -7,6 +7,7 @@ import { loadAppConfig } from "./app-config.js";
 import { parseCliMode, type CliMode } from "./cli.js";
 import { configSummaryLines } from "./config-summary.js";
 import { runDailyFeed } from "./daily-feed.js";
+import { sendMaintenanceNotification } from "./maintenance.js";
 
 type Env = Record<string, string | undefined>;
 
@@ -24,7 +25,7 @@ const PROFILE_TEMPLATE = {
   }
 };
 
-async function runPipeline(mode: Exclude<CliMode, "setup-profile" | "test-config">, env: Env): Promise<void> {
+async function runPipeline(mode: "run" | "preview-email", env: Env): Promise<void> {
   console.log("Loading app config...");
   await runDailyFeed(mode, env);
 }
@@ -43,6 +44,12 @@ export async function main(args: string[] = process.argv.slice(2), env: Env = pr
     for (const line of configSummaryLines(config)) {
       console.log(line);
     }
+    return;
+  }
+
+  if (mode === "notify-maintenance") {
+    await sendMaintenanceNotification(env);
+    console.log("Sent maintenance notification.");
     return;
   }
 

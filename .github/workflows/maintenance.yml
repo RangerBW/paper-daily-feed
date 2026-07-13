@@ -2,6 +2,12 @@ name: Repository maintenance
 
 on:
   workflow_dispatch:
+    inputs:
+      send_test_notification:
+        description: Send a bilingual maintenance test email
+        required: false
+        type: boolean
+        default: false
   schedule:
     - cron: "37 21 * * 0"
 
@@ -45,7 +51,7 @@ jobs:
           git push origin "${MAINTENANCE_BRANCH}"
 
   sync:
-    if: ${{ github.repository != 'nehSgnaiL/paper-daily-feed' }}
+    if: ${{ github.repository != 'nehSgnaiL/paper-daily-feed' || inputs.send_test_notification }}
     needs: keepalive
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -57,6 +63,8 @@ jobs:
           persist-credentials: false
 
       - name: Sync fork from upstream
+        id: sync
+        if: ${{ github.repository != 'nehSgnaiL/paper-daily-feed' && !inputs.send_test_notification }}
         env:
           SYNC_TOKEN: ${{ secrets.MAINTENANCE_SYNC_TOKEN || github.token }}
           CAN_SYNC_WORKFLOW_FILES: ${{ secrets.MAINTENANCE_SYNC_TOKEN != '' }}
@@ -70,6 +78,19 @@ jobs:
           git fetch --no-tags origin main
           git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
           git fetch --no-tags upstream main
+
+          set_manual_action() {
+            local reason="$1"
+            local details="${2:-}"
+            local delimiter="maintenance-${RANDOM}-$(date +%s)"
+
+            echo "manual_reason=${reason}" >> "$GITHUB_OUTPUT"
+            {
+              echo "manual_details<<${delimiter}"
+              echo "${details}"
+              echo "${delimiter}"
+            } >> "$GITHUB_OUTPUT"
+          }
 
           write_workflow_sync_steps() {
             echo "### What to do next"
@@ -146,6 +167,8 @@ jobs:
               write_workflow_sync_steps
             } >> "$GITHUB_STEP_SUMMARY"
 
+            workflow_details="$(printf '%s\n%s' "${upstream_workflow_file_changes}" "${fork_workflow_file_changes}" | sed '/^$/d' | sort -u)"
+            set_manual_action "workflow-permission" "${workflow_details}"
             echo "::warning title=Auto-sync skipped::Open the job summary for step-by-step setup. Add MAINTENANCE_SYNC_TOKEN, then rerun this workflow."
             exit 0
           fi
@@ -184,6 +207,7 @@ jobs:
                 echo "For non-technical users: copy the file list above and ask a maintainer to resolve the custom changes against the latest upstream version."
               } >> "$GITHUB_STEP_SUMMARY"
 
+              set_manual_action "rebase-conflict" "${conflicted_files}"
               echo "::warning title=Auto-sync needs help::Open the job summary for step-by-step recovery."
               exit 0
             fi
@@ -210,6 +234,7 @@ jobs:
               echo "If you use \`main\` for your own work, keep that work in commits so this workflow can rebase them on top of upstream."
             } >> "$GITHUB_STEP_SUMMARY"
 
+            set_manual_action "push-failed" "main branch push rejected"
             echo "::error title=Auto-sync failed::Open the job summary for step-by-step recovery."
             exit 1
           fi
@@ -223,3 +248,35 @@ jobs:
               echo "Workflow files were included because \`MAINTENANCE_SYNC_TOKEN\` is configured."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prepare maintenance email test
+        id: test
+        if: ${{ inputs.send_test_notification }}
+        run: |
+          echo "manual_reason=test" >> "$GITHUB_OUTPUT"
+          echo "manual_details=" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js for maintenance notification
+        if: ${{ always() && (steps.sync.outputs.manual_reason != '' || steps.test.outputs.manual_reason != '') }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install notification dependencies
+        if: ${{ always() && (steps.sync.outputs.manual_reason != '' || steps.test.outputs.manual_reason != '') }}
+        run: npm ci
+
+      - name: Send bilingual maintenance notification
+        if: ${{ always() && (steps.sync.outputs.manual_reason != '' || steps.test.outputs.manual_reason != '') }}
+        env:
+          MAINTENANCE_REASON: ${{ steps.sync.outputs.manual_reason || steps.test.outputs.manual_reason }}
+          MAINTENANCE_DETAILS: ${{ steps.sync.outputs.manual_details || steps.test.outputs.manual_details }}
+          MAINTENANCE_REPOSITORY: ${{ github.repository }}
+          MAINTENANCE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SENDER: ${{ secrets.SENDER }}
+          SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+          RECEIVER: ${{ secrets.RECEIVER }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        run: npm start -- notify-maintenance
