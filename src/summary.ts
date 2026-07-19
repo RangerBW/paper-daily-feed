@@ -3,6 +3,11 @@ import type { RecommendedPaper } from "./types.js";
 
 export type SummarizePaper = (paper: RecommendedPaper) => Promise<string>;
 
+function fallbackSummary(paper: RecommendedPaper): string {
+  if (paper.abstract.trim()) return paper.abstract;
+  return `该论文题为《${paper.title}》，当前 RSS 或元数据源未提供摘要，因此暂时无法可靠判断其研究背景、方法、结果和贡献。建议打开原文页面进一步确认具体内容。`;
+}
+
 export function createOpenAISummarizer(
   config: SummaryConfig,
   _env: Record<string, string | undefined> = process.env
@@ -25,7 +30,7 @@ export function createOpenAISummarizer(
         messages: [
           {
             role: "system",
-            content: `You write concise one-sentence TLDR summaries for academic papers. Write the TLDR in ${config.language}.`
+            content: `You write accurate academic paper summaries. Follow these output requirements exactly: ${config.language}`
           },
           {
             role: "user",
@@ -64,7 +69,7 @@ export async function summarizeRecommendedPapers(
           error instanceof Error ? error.message : String(error)
         }`
       );
-      tldr = paper.abstract;
+      tldr = fallbackSummary(paper);
     }
     summarized.push({
       ...paper,

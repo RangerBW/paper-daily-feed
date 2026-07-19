@@ -57,6 +57,7 @@ describe("createOpenAISummarizer", () => {
       })
     );
     const requestInit = fetchMock.mock.calls[0]?.[1];
+    expect(String(requestInit?.body)).toContain("You write accurate academic paper summaries");
     expect(String(requestInit?.body)).toContain("Chinese");
     expect(String(requestInit?.body)).toContain('"max_tokens":2048');
   });
@@ -97,5 +98,26 @@ describe("createOpenAISummarizer", () => {
     const summarized = await summarizeRecommendedPapers(papers, async () => "A concise TLDR.");
 
     expect(summarized[0].tldr).toBe("A concise TLDR.");
+  });
+
+  it("uses a Chinese fallback when summary generation fails and no abstract is available", async () => {
+    const papers: RecommendedPaper[] = [
+      {
+        journal: "Nature",
+        title: "Urban mobility",
+        abstract: "",
+        url: "https://example.test/paper",
+        publishedAt: null,
+        score: 0.9,
+        matchContext: null
+      }
+    ];
+
+    const summarized = await summarizeRecommendedPapers(papers, async () => {
+      throw new Error("unavailable");
+    });
+
+    expect(summarized[0].tldr).toContain("未提供摘要");
+    expect(summarized[0].tldr).toContain("Urban mobility");
   });
 });
