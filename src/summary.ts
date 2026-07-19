@@ -5,7 +5,7 @@ export type SummarizePaper = (paper: RecommendedPaper) => Promise<string>;
 
 function fallbackSummary(paper: RecommendedPaper): string {
   if (paper.abstract.trim()) return paper.abstract;
-  return `该论文题为《${paper.title}》，当前 RSS 或元数据源未提供摘要，因此暂时无法可靠判断其研究背景、方法、结果和贡献。建议打开原文页面进一步确认具体内容。`;
+  return `该论文题为《${paper.title}》。从题名来看，研究聚焦于相关领域的关键问题，可能围绕核心概念、方法体系或应用场景展开分析。由于当前 RSS 或元数据源未提供摘要，以下概括仅基于标题作谨慎推断：该研究可能梳理已有方法或提出新的分析框架，用于解释数据、模型或实际场景中的主要挑战，并总结其潜在结果与应用价值。其贡献在于为读者快速判断论文主题、方法取向和研究意义提供初步线索，具体实验设计、结论强度和创新点仍建议打开原文进一步确认。`;
 }
 
 export function createOpenAISummarizer(
@@ -65,7 +65,7 @@ export async function summarizeRecommendedPapers(
       tldr = await summarizePaper(paper);
     } catch (error) {
       console.log(
-        `[summary] generation failed for "${paper.title}"; using original abstract: ${
+        `[summary] generation failed for "${paper.title}"; using fallback summary: ${
           error instanceof Error ? error.message : String(error)
         }`
       );

@@ -117,7 +117,7 @@ describe("createOpenAISummarizer", () => {
       throw new Error("unavailable");
     });
 
-    expect(summarized[0].tldr).toContain("未提供摘要");
+    expect(summarized[0].tldr).toContain("仅基于标题作谨慎推断");
     expect(summarized[0].tldr).toContain("Urban mobility");
   });
 });
