@@ -106,4 +106,44 @@ describe("metadata enrichment", () => {
     expect(enriched[0]?.authors).toEqual(["Ada Lovelace"]);
     expect(enriched[0]?.doi).toBe("10.48550/arXiv.2603.21507");
   });
+
+  it("uses title lookup metadata when RSS has no DOI or abstract", async () => {
+    const fetchCrossref = mock();
+    const fetchArxivByTitle = mock(async () => []);
+    const fetchOpenAlexByTitle = mock(async () => [
+      {
+        id: "https://openalex.org/W123",
+        title: "Delineating hierarchical activity space from high-resolution urban mobility flows",
+        abstract:
+          "High-resolution urban mobility flows are used to delineate hierarchical activity spaces across nested city scales.",
+        authors: ["Ada Lovelace"],
+        publishedAt: new Date("2026-03-27T00:00:00.000Z"),
+        url: "https://arxiv.org/abs/2603.21507",
+        doi: "10.48550/arXiv.2603.21507",
+        journal: "arXiv"
+      }
+    ]);
+
+    const enriched = await enrichFeedPaperMetadata(
+      [
+        paper({
+          title: "Delineating hierarchical activity space from high-resolution urban mobility flows",
+          abstract: "",
+          url: "https://example.test/paper"
+        })
+      ],
+      { enabled: true, crossref: { enabled: true, mailto: "" } },
+      { fetchCrossref, fetchArxivByTitle, fetchOpenAlexByTitle }
+    );
+
+    expect(fetchCrossref).not.toHaveBeenCalled();
+    expect(fetchArxivByTitle).toHaveBeenCalledWith(
+      "Delineating hierarchical activity space from high-resolution urban mobility flows"
+    );
+    expect(fetchOpenAlexByTitle).toHaveBeenCalledWith(
+      "Delineating hierarchical activity space from high-resolution urban mobility flows"
+    );
+    expect(enriched[0]?.abstract).toContain("hierarchical activity spaces");
+    expect(enriched[0]?.doi).toBe("10.48550/arXiv.2603.21507");
+  });
 });

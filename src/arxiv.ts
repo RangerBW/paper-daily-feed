@@ -26,6 +26,34 @@ function tagValue(xml: string, tag: string): string | undefined {
   return value ? decodeXml(value) : undefined;
 }
 
+function arxivIdFromEntry(entry: string, fallbackId?: string): string | undefined {
+  return normalizeArxivId(tagValue(entry, "id")?.match(/\/abs\/([^?\s#]+)/i)?.[1] ?? fallbackId ?? "");
+}
+
+function metadataFromEntry(entry: string, fallbackId?: string): ArxivMetadata | null {
+  const id = arxivIdFromEntry(entry, fallbackId);
+  if (!id) return null;
+
+  const title = tagValue(entry, "title");
+  const abstract = tagValue(entry, "summary");
+  const authors = Array.from(entry.matchAll(/<author(?:\s[^>]*)?>([\s\S]*?)<\/author>/gi), (match) =>
+    tagValue(match[1] ?? "", "name")
+  ).filter((value): value is string => Boolean(value));
+  const published = tagValue(entry, "published");
+  const publishedAt = published ? new Date(published) : null;
+  const doi = tagValue(entry, "arxiv:doi") ?? tagValue(entry, "doi");
+
+  return {
+    id,
+    ...(title ? { title } : {}),
+    ...(abstract ? { abstract } : {}),
+    ...(authors.length ? { authors } : {}),
+    publishedAt: publishedAt && !Number.isNaN(publishedAt.getTime()) ? publishedAt : null,
+    url: `https://arxiv.org/abs/${id}`,
+    ...(doi ? { doi } : {})
+  };
+}
+
 function normalizeArxivId(value: string): string | undefined {
   const trimmed = value.trim().replace(/^arxiv:/i, "");
   const modern = trimmed.match(/^(\d{4}\.\d{4,5})(?:v\d+)?$/i)?.[1];
@@ -68,22 +96,34 @@ export async function fetchArxivMetadata(
   const entry = body.match(/<entry(?:\s[^>]*)?>([\s\S]*?)<\/entry>/i)?.[1];
   if (!entry) return null;
 
-  const title = tagValue(entry, "title");
-  const abstract = tagValue(entry, "summary");
-  const authors = Array.from(entry.matchAll(/<author(?:\s[^>]*)?>([\s\S]*?)<\/author>/gi), (match) =>
-    tagValue(match[1] ?? "", "name")
-  ).filter((value): value is string => Boolean(value));
-  const published = tagValue(entry, "published");
-  const publishedAt = published ? new Date(published) : null;
-  const doi = tagValue(entry, "arxiv:doi") ?? tagValue(entry, "doi");
+  return metadataFromEntry(entry, normalizedId);
+}
 
-  return {
-    id: normalizedId,
-    ...(title ? { title } : {}),
-    ...(abstract ? { abstract } : {}),
-    ...(authors.length ? { authors } : {}),
-    publishedAt: publishedAt && !Number.isNaN(publishedAt.getTime()) ? publishedAt : null,
-    url: `https://arxiv.org/abs/${normalizedId}`,
-    ...(doi ? { doi } : {})
-  };
+export async function fetchArxivMetadataByTitle(
+  title: string,
+  options: { fetcher?: Fetcher } = {}
+): Promise<ArxivMetadata[]> {
+  const normalizedTitle = title.replace(/\s+/g, " ").trim();
+  if (!normalizedTitle) return [];
+
+  const fetcher = options.fetcher ?? fetch;
+  const url = new URL("https://export.arxiv.org/api/query");
+  url.searchParams.set("search_query", `ti:"${normalizedTitle.replace(/"/g, "")}"`);
+  url.searchParams.set("start", "0");
+  url.searchParams.set("max_results", "5");
+
+  const response = await fetcher(url, {
+    headers: {
+      Accept: "application/atom+xml, application/xml, text/xml, */*;q=0.8",
+      "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
+    }
+  });
+  if (!response.ok) {
+    throw new Error(`Status code ${response.status}`);
+  }
+
+  const body = await response.text();
+  return Array.from(body.matchAll(/<entry(?:\s[^>]*)?>([\s\S]*?)<\/entry>/gi), (match) =>
+    metadataFromEntry(match[1] ?? "")
+  ).filter((metadata): metadata is ArxivMetadata => metadata !== null);
 }

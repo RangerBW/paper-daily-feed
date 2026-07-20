@@ -1,11 +1,14 @@
 import type { MetadataEnrichmentConfig, MetadataRepairConfig } from "./app-config.js";
-import { fetchArxivMetadata, findArxivId, type ArxivMetadata } from "./arxiv.js";
+import { fetchArxivMetadata, fetchArxivMetadataByTitle, findArxivId, type ArxivMetadata } from "./arxiv.js";
 import { fetchCrossrefWork, findDoi, type CrossrefMetadata } from "./crossref.js";
+import { fetchOpenAlexMetadataByTitle, type OpenAlexMetadata } from "./openalex.js";
 import type { FeedPaper, RecommendedPaper } from "./types.js";
 
 type EnrichmentDependencies = {
   fetchCrossref?: (doi: string) => Promise<CrossrefMetadata | null>;
   fetchArxiv?: (id: string) => Promise<ArxivMetadata | null>;
+  fetchArxivByTitle?: (title: string) => Promise<ArxivMetadata[]>;
+  fetchOpenAlexByTitle?: (title: string) => Promise<OpenAlexMetadata[]>;
 };
 
 type NerEntity = {
@@ -32,6 +35,27 @@ function meaningfulAbstract(value: string | undefined): value is string {
   return Boolean(value && /[A-Za-z0-9]/.test(value) && value.replace(/\W/g, "").length >= 20);
 }
 
+function normalizedTitle(value: string | undefined): string {
+  return (value ?? "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function titleMatches(left: string, right: string | undefined): boolean {
+  const normalizedLeft = normalizedTitle(left);
+  const normalizedRight = normalizedTitle(right);
+  return Boolean(
+    normalizedLeft &&
+      normalizedRight &&
+      (normalizedLeft === normalizedRight ||
+        normalizedLeft.includes(normalizedRight) ||
+        normalizedRight.includes(normalizedLeft))
+  );
+}
+
 function mergeCrossrefMetadata(paper: FeedPaper, metadata: CrossrefMetadata): FeedPaper {
   return {
     ...paper,
@@ -56,6 +80,23 @@ function mergeArxivMetadata(paper: FeedPaper, metadata: ArxivMetadata): FeedPape
   };
 }
 
+function mergeOpenAlexMetadata(paper: FeedPaper, metadata: OpenAlexMetadata): FeedPaper {
+  return {
+    ...paper,
+    doi: paper.doi ?? metadata.doi,
+    title: metadata.title ?? paper.title,
+    journal: metadata.journal ?? paper.journal,
+    abstract: meaningfulAbstract(metadata.abstract) ? metadata.abstract : paper.abstract,
+    publishedAt: metadata.publishedAt ?? paper.publishedAt,
+    url: paper.url || metadata.url || paper.url,
+    ...(metadata.authors?.length ? { authors: metadata.authors } : {})
+  };
+}
+
+function bestTitleMatch<T extends { title?: string; abstract?: string }>(paper: FeedPaper, candidates: T[]): T | undefined {
+  return candidates.find((candidate) => titleMatches(paper.title, candidate.title) && meaningfulAbstract(candidate.abstract));
+}
+
 /** Applies inexpensive metadata precedence before matching. */
 export async function enrichFeedPaperMetadata(
   papers: FeedPaper[],
@@ -67,9 +108,13 @@ export async function enrichFeedPaperMetadata(
   const fetchCrossref =
     dependencies.fetchCrossref ?? ((doi: string) => fetchCrossrefWork(doi, { mailto: config.crossref.mailto }));
   const fetchArxiv = dependencies.fetchArxiv ?? ((id: string) => fetchArxivMetadata(id));
+  const fetchArxivByTitle = dependencies.fetchArxivByTitle ?? ((title: string) => fetchArxivMetadataByTitle(title));
+  const fetchOpenAlexByTitle =
+    dependencies.fetchOpenAlexByTitle ?? ((title: string) => fetchOpenAlexMetadataByTitle(title));
   const enriched: FeedPaper[] = [];
   let repaired = 0;
   let arxivRepaired = 0;
+  let openAlexRepaired = 0;
   for (const paper of papers) {
     let nextPaper = paper;
     const doi = paperDoi(paper);
@@ -105,11 +150,52 @@ export async function enrichFeedPaperMetadata(
       }
     }
 
+    if (!meaningfulAbstract(nextPaper.abstract)) {
+      try {
+        const metadata = bestTitleMatch(nextPaper, await fetchArxivByTitle(nextPaper.title));
+        if (metadata) {
+          const enrichedPaper = mergeArxivMetadata(nextPaper, metadata);
+          if (meaningfulAbstract(enrichedPaper.abstract) && enrichedPaper.abstract !== nextPaper.abstract) {
+            arxivRepaired += 1;
+          }
+          nextPaper = enrichedPaper;
+        }
+      } catch (error) {
+        console.log(
+          `[paper-metadata] arXiv title lookup skipped for "${nextPaper.title}": ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    }
+
+    if (!meaningfulAbstract(nextPaper.abstract)) {
+      try {
+        const metadata = bestTitleMatch(nextPaper, await fetchOpenAlexByTitle(nextPaper.title));
+        if (metadata) {
+          const enrichedPaper = mergeOpenAlexMetadata(nextPaper, metadata);
+          if (meaningfulAbstract(enrichedPaper.abstract) && enrichedPaper.abstract !== nextPaper.abstract) {
+            openAlexRepaired += 1;
+          }
+          nextPaper = enrichedPaper;
+        }
+      } catch (error) {
+        console.log(
+          `[paper-metadata] OpenAlex title lookup skipped for "${nextPaper.title}": ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    }
+
     enriched.push(nextPaper);
   }
   console.log(`[paper-metadata] Crossref enriched ${repaired}/${papers.length} papers`);
   if (arxivRepaired > 0) {
     console.log(`[paper-metadata] arXiv enriched abstracts for ${arxivRepaired}/${papers.length} papers`);
+  }
+  if (openAlexRepaired > 0) {
+    console.log(`[paper-metadata] OpenAlex enriched abstracts for ${openAlexRepaired}/${papers.length} papers`);
   }
   return enriched;
 }
