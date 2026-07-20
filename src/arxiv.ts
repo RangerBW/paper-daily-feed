@@ -11,6 +11,25 @@ export type ArxivMetadata = {
 };
 
 type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+const DEFAULT_TIMEOUT_MS = 8_000;
+
+async function fetchWithTimeout(
+  fetcher: Fetcher,
+  input: string | URL | Request,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetcher(input, {
+      ...init,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function decodeXml(text: string): string {
   return stripHtml(
@@ -73,7 +92,7 @@ export function findArxivId(text: string): string | undefined {
 
 export async function fetchArxivMetadata(
   id: string,
-  options: { fetcher?: Fetcher } = {}
+  options: { fetcher?: Fetcher; timeoutMs?: number } = {}
 ): Promise<ArxivMetadata | null> {
   const normalizedId = normalizeArxivId(id);
   if (!normalizedId) return null;
@@ -82,12 +101,17 @@ export async function fetchArxivMetadata(
   const url = new URL("https://export.arxiv.org/api/query");
   url.searchParams.set("id_list", normalizedId);
 
-  const response = await fetcher(url, {
-    headers: {
-      Accept: "application/atom+xml, application/xml, text/xml, */*;q=0.8",
-      "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
-    }
-  });
+  const response = await fetchWithTimeout(
+    fetcher,
+    url,
+    {
+      headers: {
+        Accept: "application/atom+xml, application/xml, text/xml, */*;q=0.8",
+        "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
+      }
+    },
+    options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  );
   if (!response.ok) {
     throw new Error(`Status code ${response.status}`);
   }
@@ -101,7 +125,7 @@ export async function fetchArxivMetadata(
 
 export async function fetchArxivMetadataByTitle(
   title: string,
-  options: { fetcher?: Fetcher } = {}
+  options: { fetcher?: Fetcher; timeoutMs?: number } = {}
 ): Promise<ArxivMetadata[]> {
   const normalizedTitle = title.replace(/\s+/g, " ").trim();
   if (!normalizedTitle) return [];
@@ -112,12 +136,17 @@ export async function fetchArxivMetadataByTitle(
   url.searchParams.set("start", "0");
   url.searchParams.set("max_results", "5");
 
-  const response = await fetcher(url, {
-    headers: {
-      Accept: "application/atom+xml, application/xml, text/xml, */*;q=0.8",
-      "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
-    }
-  });
+  const response = await fetchWithTimeout(
+    fetcher,
+    url,
+    {
+      headers: {
+        Accept: "application/atom+xml, application/xml, text/xml, */*;q=0.8",
+        "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
+      }
+    },
+    options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  );
   if (!response.ok) {
     throw new Error(`Status code ${response.status}`);
   }

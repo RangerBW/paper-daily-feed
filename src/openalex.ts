@@ -10,6 +10,25 @@ export type OpenAlexMetadata = {
 };
 
 type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+const DEFAULT_TIMEOUT_MS = 8_000;
+
+async function fetchWithTimeout(
+  fetcher: Fetcher,
+  input: string | URL | Request,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetcher(input, {
+      ...init,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 type OpenAlexAuthorship = {
   author?: {
@@ -80,7 +99,7 @@ function normalizeWork(work: OpenAlexWork): OpenAlexMetadata | null {
 
 export async function fetchOpenAlexMetadataByTitle(
   title: string,
-  options: { fetcher?: Fetcher } = {}
+  options: { fetcher?: Fetcher; timeoutMs?: number } = {}
 ): Promise<OpenAlexMetadata[]> {
   const normalizedTitle = title.replace(/\s+/g, " ").trim();
   if (!normalizedTitle) return [];
@@ -91,12 +110,17 @@ export async function fetchOpenAlexMetadataByTitle(
   url.searchParams.set("per-page", "5");
   url.searchParams.set("select", "id,title,display_name,doi,abstract_inverted_index,authorships,publication_date,primary_location");
 
-  const response = await fetcher(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
-    }
-  });
+  const response = await fetchWithTimeout(
+    fetcher,
+    url,
+    {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "paper-daily-feed/0.1.4 (metadata enrichment)"
+      }
+    },
+    options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  );
   if (!response.ok) {
     throw new Error(`Status code ${response.status}`);
   }
