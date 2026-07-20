@@ -174,8 +174,11 @@ Any issues, questions, or experience could be shared via [raising issue](https:/
 >
 > - **Auto-updates:**
 > The [maintenance workflow](../../actions/workflows/maintenance.yml) keeps feeds active and fetches updates weekly.
-> To also sync workflow files, create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork with **Contents** and **Workflows** read/write, then save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN`.
-> If an update needs manual action, the workflow sends a bilingual English/Chinese email to `RECEIVER` with the exact steps and GitHub links. Successful updates and no-update checks do not send maintenance email.
+> - **Update authorization:**
+> Create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork, grant it **Contents** and **Workflows** read/write access, and save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN` to enable workflow updates.
+>
+> - **Maintenance notifications:**
+> If update authorization is missing or an update fails, the workflow sends `RECEIVER` an email with manual update instructions.
 
 <details close>
   <summary>Customization notes</summary>
@@ -194,22 +197,22 @@ Local setup is optional. Use it only if you want to preview or customize the fee
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Copy the examples, then edit them for your account and interests
 cp .env.example .env.local
 cp config/app.example.jsonc config/app.jsonc
 
 # Optional: print a starter profile block to paste into config/app.jsonc
-npm run setup-profile
+bun run setup-profile
 
 # Test
-npm run test:config
-npm run preview-email
-npm run test:feeds:live
+bun run test:config
+bun run preview-email
+bun run test:feeds:live
 
 # Run
-npm start -- run
+bun run start -- run
 ```
 
 For local development, keep non-secret app settings in `config/app.jsonc` and secrets in `.env.local`.

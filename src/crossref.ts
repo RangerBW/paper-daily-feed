@@ -1,6 +1,7 @@
+import packageMetadata from "../package.json";
 import { stripHtml } from "./text.js";
 
-type Fetcher = typeof fetch;
+type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
 export type CrossrefMetadata = {
   doi: string;
@@ -51,6 +52,7 @@ type FetchCrossrefOptions = {
 };
 
 const DOI_PATTERN = /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
+const USER_AGENT = `paper-daily-feed/${packageMetadata.version} (+https://github.com/nehSgnaiL/paper-daily-feed)`;
 
 export function findDoi(text: string | undefined): string | undefined {
   const match = text?.match(DOI_PATTERN)?.[0];
@@ -118,7 +120,7 @@ export async function fetchCrossrefWork(
   const response = await fetcher(url.toString(), {
     headers: {
       Accept: "application/json",
-      "User-Agent": "paper-daily-feed/0.1.3 (+https://github.com/nehSgnaiL/paper-daily-feed)"
+      "User-Agent": USER_AGENT
     }
   });
 
@@ -148,7 +150,7 @@ export async function fetchCrossrefJournalWorks(
   const response = await fetcher(url.toString(), {
     headers: {
       Accept: "application/json",
-      "User-Agent": "paper-daily-feed/0.1.3 (+https://github.com/nehSgnaiL/paper-daily-feed)"
+      "User-Agent": USER_AGENT
     }
   });
   if (!response.ok) {

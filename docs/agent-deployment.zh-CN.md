@@ -8,12 +8,12 @@
 
 将项目部署到用户本人的 GitHub 账号，并在这个 fork 中配置、启用和验证 GitHub Actions，同时赋予相应权限。不得部署到规范仓库或 Agent 自己的账号。
 
-## 以项目文档为准
+## 部署原则
 
 - 从头到尾阅读并执行 `@README.zh-CN.md`，重点遵循其中的 **快速开始**。
-- 只有当用户需要更多设置时，才查阅 `@config/app.example.jsonc`。
 - 只部署规范仓库：<https://github.com/nehSgnaiL/paper-daily-feed>。
 - 如果本文件与 `@README.zh-CN.md` 不一致，以 `@README.zh-CN.md` 为准。
+- 当用户有额外需求时，先查阅 `@config/app.example.jsonc`，并尽可能通过配置满足需求；不要修改应用代码、工作流文件或其他受版本控制的项目文件。
 
 ## 与用户协作
 

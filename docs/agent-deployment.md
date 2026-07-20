@@ -8,12 +8,12 @@
 
 Deploy the project as a fork under the user's own GitHub account. Configure, enable, and verify GitHub Actions in that fork with the required permissions. Never deploy to the canonical repository or the Agent's own account.
 
-## Follow the project guide
+## Deployment principles
 
 - Read and follow `@README.md` from beginning to end, especially **Get started**.
-- Consult `@config/app.example.jsonc` only when the user wants more settings.
 - Deploy only the canonical repository: <https://github.com/nehSgnaiL/paper-daily-feed>.
 - If these instructions and `@README.md` differ, follow `@README.md`.
+- When the user has additional requirements, consult `@config/app.example.jsonc` first and meet those requirements through configuration whenever possible. Do not modify application code, workflow files, or other tracked project files.
 
 ## Work with the user
 

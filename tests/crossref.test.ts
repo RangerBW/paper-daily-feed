@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, mock } from "bun:test";
+import packageMetadata from "../package.json";
 import { fetchCrossrefJournalWorks, fetchCrossrefWork, findDoi } from "../src/crossref.js";
 
 describe("Crossref metadata", () => {
   it("retrieves recent works for a journal ISSN", async () => {
-    const fetcher = vi.fn(async (_input: string | URL | Request) =>
+    const fetcher = mock(async (_input: string | URL | Request) =>
       new Response(
         JSON.stringify({
           message: {
@@ -23,7 +24,7 @@ describe("Crossref metadata", () => {
 
     const works = await fetchCrossrefJournalWorks("2469-4460", { fetcher });
 
-    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher).toHaveBeenCalledTimes(1);
     expect(String(fetcher.mock.calls[0]?.[0])).toContain("journals/2469-4460/works");
     expect(works).toMatchObject([{ doi: "10.1080/example", title: "Recent journal paper" }]);
   });
@@ -36,7 +37,7 @@ describe("Crossref metadata", () => {
   });
 
   it("normalizes Crossref work metadata from DOI lookup responses", async () => {
-    const fetcher = vi.fn(async () =>
+    const fetcher = mock(async () =>
       new Response(
         JSON.stringify({
           message: {
@@ -64,7 +65,8 @@ describe("Crossref metadata", () => {
       "https://api.crossref.org/works/10.1080%2F24694452.2025.2592754",
       expect.objectContaining({
         headers: expect.objectContaining({
-          Accept: "application/json"
+          Accept: "application/json",
+          "User-Agent": `paper-daily-feed/${packageMetadata.version} (+https://github.com/nehSgnaiL/paper-daily-feed)`
         })
       })
     );

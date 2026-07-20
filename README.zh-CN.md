@@ -175,8 +175,11 @@ GitHub 默认暂停 fork 仓库中的工作流。启用它们：
 >
 > - **自动更新：**
 > [maintenance workflow](../../actions/workflows/maintenance.yml) 会每周保持推送可用并拉取更新。
-> 若也想同步工作流文件，请创建仅限你的 fork 的 [fine-grained token](https://github.com/settings/personal-access-tokens)，授予 **Contents** 和 **Workflows** 读写权限，再保存为 Actions secret：`MAINTENANCE_SYNC_TOKEN`。
-> 如果更新需要手动操作，工作流会向 `RECEIVER` 发送一封英中双语邮件，其中包含准确步骤和 GitHub 链接。更新成功或没有新版本时不会发送维护邮件。
+> - **更新授权：**
+> 请创建仅限分叉‌项目的 [fine-grained token](https://github.com/settings/personal-access-tokens)，授予 **Contents** 和 **Workflows** 读写权限，保存为 Actions secret：`MAINTENANCE_SYNC_TOKEN`以启用工作流更新。
+>
+> - **维护提醒：**
+> 如果缺少更新授权/更新错误，工作流会向 `RECEIVER` 发送手动更新指引的邮件。
 
 <details close>
   <summary>自定义说明</summary>
@@ -196,22 +199,22 @@ GitHub 默认暂停 fork 仓库中的工作流。启用它们：
 
 ```bash
 # 安装依赖
-npm install
+bun install
 
 # 复制示例文件，然后按你的账号和兴趣修改
 cp .env.example .env.local
 cp config/app.example.jsonc config/app.jsonc
 
 # 可选：打印一个文本兴趣画像配置片段，方便粘贴到 config/app.jsonc
-npm run setup-profile
+bun run setup-profile
 
 # 测试
-npm run test:config
-npm run preview-email
-npm run test:feeds:live
+bun run test:config
+bun run preview-email
+bun run test:feeds:live
 
 # 运行
-npm start -- run
+bun run start -- run
 ```
 
 本地开发时，把非敏感应用配置放在 `config/app.jsonc`，把 secrets 放在 `.env.local`。

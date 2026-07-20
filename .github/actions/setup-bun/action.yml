@@ -1,0 +1,28 @@
+name: Setup Bun project
+description: Install the pinned Bun runtime, restore its package cache, and install locked dependencies.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      id: setup
+      uses: oven-sh/setup-bun@v2
+
+    - name: Locate Bun package cache
+      id: cache_path
+      shell: bash
+      run: echo "dir=$(bun pm cache)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Bun package cache
+      uses: actions/cache@v5
+      with:
+        path: ${{ steps.cache_path.outputs.dir }}
+        key: ${{ runner.os }}-bun-${{ steps.setup.outputs['bun-version'] }}-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-${{ steps.setup.outputs['bun-version'] }}-
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        ONNXRUNTIME_NODE_INSTALL: skip
+      run: bun ci
