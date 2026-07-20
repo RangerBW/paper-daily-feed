@@ -72,4 +72,38 @@ describe("metadata enrichment", () => {
 
     expect(enriched[0]?.abstract).toBe("RSS abstract with useful text.");
   });
+
+  it("uses arXiv metadata when an arXiv DOI has no useful Crossref abstract", async () => {
+    const fetchCrossref = mock(async () => ({
+      doi: "10.48550/arXiv.2603.21507",
+      title: "Delineating hierarchical activity space from high-resolution urban mobility flows"
+    }));
+    const fetchArxiv = mock(async () => ({
+      id: "2603.21507",
+      title: "Delineating hierarchical activity space from high-resolution urban mobility flows",
+      abstract:
+        "High-resolution urban mobility flows reveal activity spaces that can be organized into nested spatial hierarchies.",
+      authors: ["Ada Lovelace"],
+      publishedAt: new Date("2026-03-27T00:00:00.000Z"),
+      url: "https://arxiv.org/abs/2603.21507"
+    }));
+
+    const enriched = await enrichFeedPaperMetadata(
+      [
+        paper({
+          title: "Delineating hierarchical activity space from high-resolution urban mobility flows",
+          abstract: "",
+          url: "https://doi.org/10.48550/arXiv.2603.21507"
+        })
+      ],
+      { enabled: true, crossref: { enabled: true, mailto: "" } },
+      { fetchCrossref, fetchArxiv }
+    );
+
+    expect(fetchCrossref).toHaveBeenCalledWith("10.48550/arXiv.2603.21507");
+    expect(fetchArxiv).toHaveBeenCalledWith("2603.21507");
+    expect(enriched[0]?.abstract).toContain("nested spatial hierarchies");
+    expect(enriched[0]?.authors).toEqual(["Ada Lovelace"]);
+    expect(enriched[0]?.doi).toBe("10.48550/arXiv.2603.21507");
+  });
 });

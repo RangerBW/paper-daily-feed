@@ -1,9 +1,11 @@
 import type { MetadataEnrichmentConfig, MetadataRepairConfig } from "./app-config.js";
+import { fetchArxivMetadata, findArxivId, type ArxivMetadata } from "./arxiv.js";
 import { fetchCrossrefWork, findDoi, type CrossrefMetadata } from "./crossref.js";
 import type { FeedPaper, RecommendedPaper } from "./types.js";
 
 type EnrichmentDependencies = {
   fetchCrossref?: (doi: string) => Promise<CrossrefMetadata | null>;
+  fetchArxiv?: (id: string) => Promise<ArxivMetadata | null>;
 };
 
 type NerEntity = {
@@ -22,6 +24,10 @@ function paperDoi(paper: FeedPaper): string | undefined {
   return paper.doi ?? findDoi([paper.url, paper.metadataText, paper.title].filter(Boolean).join(" "));
 }
 
+function paperArxivId(paper: FeedPaper): string | undefined {
+  return findArxivId([paper.url, paper.doi, paper.metadataText, paper.title].filter(Boolean).join(" "));
+}
+
 function meaningfulAbstract(value: string | undefined): value is string {
   return Boolean(value && /[A-Za-z0-9]/.test(value) && value.replace(/\W/g, "").length >= 20);
 }
@@ -38,6 +44,18 @@ function mergeCrossrefMetadata(paper: FeedPaper, metadata: CrossrefMetadata): Fe
   };
 }
 
+function mergeArxivMetadata(paper: FeedPaper, metadata: ArxivMetadata): FeedPaper {
+  return {
+    ...paper,
+    doi: paper.doi ?? metadata.doi ?? `10.48550/arXiv.${metadata.id}`,
+    title: metadata.title ?? paper.title,
+    abstract: meaningfulAbstract(metadata.abstract) ? metadata.abstract : paper.abstract,
+    publishedAt: metadata.publishedAt ?? paper.publishedAt,
+    url: paper.url || metadata.url || `https://arxiv.org/abs/${metadata.id}`,
+    ...(metadata.authors?.length ? { authors: metadata.authors } : {})
+  };
+}
+
 /** Applies inexpensive metadata precedence before matching. */
 export async function enrichFeedPaperMetadata(
   papers: FeedPaper[],
@@ -48,28 +66,51 @@ export async function enrichFeedPaperMetadata(
 
   const fetchCrossref =
     dependencies.fetchCrossref ?? ((doi: string) => fetchCrossrefWork(doi, { mailto: config.crossref.mailto }));
+  const fetchArxiv = dependencies.fetchArxiv ?? ((id: string) => fetchArxivMetadata(id));
   const enriched: FeedPaper[] = [];
   let repaired = 0;
+  let arxivRepaired = 0;
   for (const paper of papers) {
+    let nextPaper = paper;
     const doi = paperDoi(paper);
-    if (!doi) {
-      enriched.push(paper);
-      continue;
-    }
-    try {
-      const metadata = await fetchCrossref(doi);
-      if (metadata) {
-        enriched.push(mergeCrossrefMetadata(paper, metadata));
-        repaired += 1;
-      } else {
-        enriched.push(paper);
+    if (doi) {
+      try {
+        const metadata = await fetchCrossref(doi);
+        if (metadata) {
+          nextPaper = mergeCrossrefMetadata(nextPaper, metadata);
+          repaired += 1;
+        }
+      } catch (error) {
+        console.log(`[paper-metadata] Crossref skipped for ${doi}: ${error instanceof Error ? error.message : String(error)}`);
       }
-    } catch (error) {
-      console.log(`[paper-metadata] Crossref skipped for ${doi}: ${error instanceof Error ? error.message : String(error)}`);
-      enriched.push(paper);
     }
+
+    if (!meaningfulAbstract(nextPaper.abstract)) {
+      const arxivId = paperArxivId(nextPaper);
+      if (arxivId) {
+        try {
+          const metadata = await fetchArxiv(arxivId);
+          if (metadata) {
+            const enrichedPaper = mergeArxivMetadata(nextPaper, metadata);
+            if (meaningfulAbstract(enrichedPaper.abstract) && enrichedPaper.abstract !== nextPaper.abstract) {
+              arxivRepaired += 1;
+            }
+            nextPaper = enrichedPaper;
+          }
+        } catch (error) {
+          console.log(
+            `[paper-metadata] arXiv skipped for ${arxivId}: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+    }
+
+    enriched.push(nextPaper);
   }
   console.log(`[paper-metadata] Crossref enriched ${repaired}/${papers.length} papers`);
+  if (arxivRepaired > 0) {
+    console.log(`[paper-metadata] arXiv enriched abstracts for ${arxivRepaired}/${papers.length} papers`);
+  }
   return enriched;
 }
 
