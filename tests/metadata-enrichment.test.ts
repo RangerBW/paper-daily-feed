@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from "bun:test";
-import { enrichFeedPaperMetadata } from "../src/paper-metadata.js";
-import type { FeedPaper } from "../src/types.js";
+import { enrichFeedPaperMetadata, enrichRecommendationPaperMetadata } from "../src/paper-metadata.js";
+import type { FeedPaper, RecommendedPaper } from "../src/types.js";
 
 function paper(overrides: Partial<FeedPaper> = {}): FeedPaper {
   return {
@@ -9,6 +9,15 @@ function paper(overrides: Partial<FeedPaper> = {}): FeedPaper {
     abstract: "RSS abstract",
     url: "https://www.tandfonline.com/doi/full/10.1080/24694452.2025.2592754?af=R",
     publishedAt: null,
+    ...overrides
+  };
+}
+
+function recommendation(overrides: Partial<RecommendedPaper> = {}): RecommendedPaper {
+  return {
+    ...paper(),
+    score: 0.8,
+    matchContext: null,
     ...overrides
   };
 }
@@ -124,9 +133,9 @@ describe("metadata enrichment", () => {
       }
     ]);
 
-    const enriched = await enrichFeedPaperMetadata(
+    const enriched = await enrichRecommendationPaperMetadata(
       [
-        paper({
+        recommendation({
           title: "Delineating hierarchical activity space from high-resolution urban mobility flows",
           abstract: "",
           url: "https://example.test/paper"

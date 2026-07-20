@@ -11,6 +11,10 @@ type EnrichmentDependencies = {
   fetchOpenAlexByTitle?: (title: string) => Promise<OpenAlexMetadata[]>;
 };
 
+type EnrichmentRunOptions = {
+  titleLookup: boolean;
+};
+
 type NerEntity = {
   entity?: string;
   entity_group?: string;
@@ -97,12 +101,12 @@ function bestTitleMatch<T extends { title?: string; abstract?: string }>(paper: 
   return candidates.find((candidate) => titleMatches(paper.title, candidate.title) && meaningfulAbstract(candidate.abstract));
 }
 
-/** Applies inexpensive metadata precedence before matching. */
-export async function enrichFeedPaperMetadata(
-  papers: FeedPaper[],
+async function enrichPapersMetadata<TPaper extends FeedPaper>(
+  papers: TPaper[],
   config: MetadataEnrichmentConfig,
-  dependencies: EnrichmentDependencies = {}
-): Promise<FeedPaper[]> {
+  dependencies: EnrichmentDependencies,
+  options: EnrichmentRunOptions
+): Promise<TPaper[]> {
   if (!config.enabled || !config.crossref.enabled || papers.length === 0) return papers;
 
   const fetchCrossref =
@@ -150,7 +154,7 @@ export async function enrichFeedPaperMetadata(
       }
     }
 
-    if (!meaningfulAbstract(nextPaper.abstract)) {
+    if (options.titleLookup && !meaningfulAbstract(nextPaper.abstract)) {
       try {
         const metadata = bestTitleMatch(nextPaper, await fetchArxivByTitle(nextPaper.title));
         if (metadata) {
@@ -169,7 +173,7 @@ export async function enrichFeedPaperMetadata(
       }
     }
 
-    if (!meaningfulAbstract(nextPaper.abstract)) {
+    if (options.titleLookup && !meaningfulAbstract(nextPaper.abstract)) {
       try {
         const metadata = bestTitleMatch(nextPaper, await fetchOpenAlexByTitle(nextPaper.title));
         if (metadata) {
@@ -197,7 +201,25 @@ export async function enrichFeedPaperMetadata(
   if (openAlexRepaired > 0) {
     console.log(`[paper-metadata] OpenAlex enriched abstracts for ${openAlexRepaired}/${papers.length} papers`);
   }
-  return enriched;
+  return enriched as TPaper[];
+}
+
+/** Applies inexpensive metadata precedence before matching. */
+export async function enrichFeedPaperMetadata(
+  papers: FeedPaper[],
+  config: MetadataEnrichmentConfig,
+  dependencies: EnrichmentDependencies = {}
+): Promise<FeedPaper[]> {
+  return enrichPapersMetadata(papers, config, dependencies, { titleLookup: false });
+}
+
+/** Applies slower title-based metadata lookup only after Recommendations have been selected. */
+export async function enrichRecommendationPaperMetadata(
+  recommendations: RecommendedPaper[],
+  config: MetadataEnrichmentConfig,
+  dependencies: EnrichmentDependencies = {}
+): Promise<RecommendedPaper[]> {
+  return enrichPapersMetadata<RecommendedPaper>(recommendations, config, dependencies, { titleLookup: true });
 }
 
 function compact(value: string): string {
