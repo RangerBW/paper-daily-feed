@@ -120,7 +120,7 @@ async function enrichPapersMetadata<TPaper extends FeedPaper>(
   let arxivRepaired = 0;
   let openAlexRepaired = 0;
   for (const paper of papers) {
-    let nextPaper = paper;
+    let nextPaper: FeedPaper = paper;
     const doi = paperDoi(paper);
     if (doi) {
       try {
