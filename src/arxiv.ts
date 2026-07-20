@@ -10,7 +10,7 @@ export type ArxivMetadata = {
   doi?: string;
 };
 
-type Fetcher = typeof fetch;
+type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
 function decodeXml(text: string): string {
   return stripHtml(
