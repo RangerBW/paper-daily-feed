@@ -174,8 +174,11 @@ Any issues, questions, or experience could be shared via [raising issue](https:/
 >
 > - **Auto-updates:**
 > The [maintenance workflow](../../actions/workflows/maintenance.yml) keeps feeds active and fetches updates weekly.
-> To also sync workflow files, create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork with **Contents** and **Workflows** read/write, then save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN`.
-> If an update needs manual action, the workflow sends a bilingual English/Chinese email to `RECEIVER` with the exact steps and GitHub links. Successful updates and no-update checks do not send maintenance email.
+> - **Update authorization:**
+> Create a [fine-grained token](https://github.com/settings/personal-access-tokens) scoped to your fork, grant it **Contents** and **Workflows** read/write access, and save it as an Actions secret named `MAINTENANCE_SYNC_TOKEN` to enable workflow updates.
+>
+> - **Maintenance notifications:**
+> If update authorization is missing or an update fails, the workflow sends `RECEIVER` an email with manual update instructions.
 
 <details close>
   <summary>Customization notes</summary>
