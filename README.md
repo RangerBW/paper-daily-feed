@@ -194,22 +194,22 @@ Local setup is optional. Use it only if you want to preview or customize the fee
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Copy the examples, then edit them for your account and interests
 cp .env.example .env.local
 cp config/app.example.jsonc config/app.jsonc
 
 # Optional: print a starter profile block to paste into config/app.jsonc
-npm run setup-profile
+bun run setup-profile
 
 # Test
-npm run test:config
-npm run preview-email
-npm run test:feeds:live
+bun run test:config
+bun run preview-email
+bun run test:feeds:live
 
 # Run
-npm start -- run
+bun run start -- run
 ```
 
 For local development, keep non-secret app settings in `config/app.jsonc` and secrets in `.env.local`.
