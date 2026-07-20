@@ -59,7 +59,10 @@ describe("createOpenAISummarizer", () => {
     );
     const requestInit = fetchMock.mock.calls[0]?.[1];
     expect(String(requestInit?.body)).toContain("You write accurate academic paper summaries");
+    expect(String(requestInit?.body)).toContain("specific technical terms in the title");
     expect(String(requestInit?.body)).toContain("Chinese");
+    expect(String(requestInit?.body)).toContain("Journal: Nature");
+    expect(String(requestInit?.body)).toContain("URL: https://example.test/paper");
     expect(String(requestInit?.body)).toContain('"max_tokens":2048');
   });
 
@@ -101,11 +104,11 @@ describe("createOpenAISummarizer", () => {
     expect(summarized[0]!.tldr).toBe("A concise TLDR.");
   });
 
-  it("uses a Chinese fallback when summary generation fails and no abstract is available", async () => {
+  it("uses a title-specific Chinese fallback when summary generation fails and no abstract is available", async () => {
     const papers: RecommendedPaper[] = [
       {
         journal: "Nature",
-        title: "Urban mobility",
+        title: "Remote sensing change captioning meets large language and vision models",
         abstract: "",
         url: "https://example.test/paper",
         publishedAt: null,
@@ -120,7 +123,8 @@ describe("createOpenAISummarizer", () => {
 
     const first = summarized[0];
     expect(first).toBeDefined();
-    expect(first?.tldr).toContain("仅基于标题作谨慎推断");
-    expect(first?.tldr).toContain("Urban mobility");
+    expect(first?.tldr).toContain("遥感变化字幕生成");
+    expect(first?.tldr).toContain("大语言模型");
+    expect(first?.tldr).toContain("视觉模型");
   });
 });
