@@ -118,7 +118,9 @@ describe("createOpenAISummarizer", () => {
       throw new Error("unavailable");
     });
 
-    expect(summarized[0].tldr).toContain("仅基于标题作谨慎推断");
-    expect(summarized[0].tldr).toContain("Urban mobility");
+    const first = summarized[0];
+    expect(first).toBeDefined();
+    expect(first?.tldr).toContain("仅基于标题作谨慎推断");
+    expect(first?.tldr).toContain("Urban mobility");
   });
 });
