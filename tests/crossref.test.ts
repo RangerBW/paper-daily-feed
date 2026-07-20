@@ -1,4 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
+import packageMetadata from "../package.json";
 import { fetchCrossrefJournalWorks, fetchCrossrefWork, findDoi } from "../src/crossref.js";
 
 describe("Crossref metadata", () => {
@@ -64,7 +65,8 @@ describe("Crossref metadata", () => {
       "https://api.crossref.org/works/10.1080%2F24694452.2025.2592754",
       expect.objectContaining({
         headers: expect.objectContaining({
-          Accept: "application/json"
+          Accept: "application/json",
+          "User-Agent": `paper-daily-feed/${packageMetadata.version} (+https://github.com/nehSgnaiL/paper-daily-feed)`
         })
       })
     );
