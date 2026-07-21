@@ -69,8 +69,9 @@ describe("renderEmail", () => {
     expect(html).toContain("山居秋暝");
     expect(html).toContain("https://hitokoto.cn?uuid=example");
     expect(html).toContain(
-      "color: #6e6e73; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.5;"
+      "margin: 26px auto 0 auto; max-width: 480px; color: #6e6e73; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.5;"
     );
+    expect(html).toContain("padding: 10px 2px 26px 2px; text-align: center;");
     expect(html).toContain("font-size: 11px; line-height: 1.4; text-align: right;");
     expect(html).not.toContain("Research Bulletin");
     expect(html).not.toContain(

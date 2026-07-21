@@ -123,7 +123,7 @@ function renderDailyRomance(romance: DailyRomance | null | undefined): string {
     .filter(Boolean)
     .map(escapeHtml)
     .join(" · ");
-  return `<p style="margin: 12px auto 0 auto; max-width: 480px; color: #6e6e73; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.5;">&ldquo;${escapeHtml(
+  return `<p style="margin: 26px auto 0 auto; max-width: 480px; color: #6e6e73; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.5;">&ldquo;${escapeHtml(
     romance.text
   )}&rdquo;</p>
                 <p style="margin: 5px auto 0 auto; max-width: 480px; color: #86868b; font-size: 11px; line-height: 1.4; text-align: right;">&mdash; ${attribution} · <a href="${escapeHtml(
