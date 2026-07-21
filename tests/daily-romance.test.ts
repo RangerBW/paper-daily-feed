@@ -71,6 +71,21 @@ describe("daily romance sources", () => {
     ).rejects.toThrow("email layout");
   });
 
+  it("caps English quotations at 96 characters and 18 words", async () => {
+    const fetchQuote = (quote: string) =>
+      fetchZenQuoteRomance({
+        fetch: (async () =>
+          Response.json([{ q: quote, a: "Example Author" }])) as unknown as typeof fetch
+      });
+
+    await expect(fetchQuote("A".repeat(97))).rejects.toThrow("email layout");
+    await expect(
+      fetchQuote(
+        "One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen."
+      )
+    ).rejects.toThrow("email layout");
+  });
+
   it("chooses each source with equal probability and falls back to the other source", async () => {
     const calls: string[] = [];
     const fetchImplementation = (async (input) => {

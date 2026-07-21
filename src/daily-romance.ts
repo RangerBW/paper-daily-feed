@@ -3,8 +3,8 @@ const HITOKOTO_SOURCE = "https://hitokoto.cn";
 const HITOKOTO_MAX_LENGTH = 42;
 const ZENQUOTES_API = "https://zenquotes.io/api/random";
 const ZENQUOTES_SOURCE = "https://zenquotes.io/";
-const ZENQUOTES_MAX_LENGTH = 120;
-const ZENQUOTES_MAX_WORDS = 22;
+const ZENQUOTES_MAX_LENGTH = 96;
+const ZENQUOTES_MAX_WORDS = 18;
 const REQUEST_TIMEOUT_MS = 8_000;
 
 export type DailyRomanceConfig = {

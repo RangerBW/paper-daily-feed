@@ -68,8 +68,10 @@ describe("renderEmail", () => {
     expect(html).toContain(">一言</a>");
     expect(html).toContain("山居秋暝");
     expect(html).toContain("https://hitokoto.cn?uuid=example");
-    expect(html).toContain("serif; font-size: 16px; line-height: 1.55;");
-    expect(html).toContain("font-size: 12px; line-height: 1.4; text-align: right;");
+    expect(html).toContain(
+      "color: #6e6e73; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.5;"
+    );
+    expect(html).toContain("font-size: 11px; line-height: 1.4; text-align: right;");
     expect(html).not.toContain("Research Bulletin");
     expect(html).not.toContain(
       "A recommendation of papers based on your research interests."
@@ -77,7 +79,7 @@ describe("renderEmail", () => {
     expect(html).not.toContain("Anonymous");
   });
 
-  it("keeps English daily quotations at the larger Latin font size", () => {
+  it("keeps English daily quotations visually subordinate to paper titles", () => {
     const html = renderEmail([], {
       text: "The quieter you become, the more you are able to hear.",
       author: "Rumi",
@@ -86,7 +88,7 @@ describe("renderEmail", () => {
       sourceName: "ZenQuotes"
     });
 
-    expect(html).toContain("serif; font-size: 17px; line-height: 1.55;");
+    expect(html).toContain("serif; font-size: 14px; line-height: 1.5;");
   });
 
   it("renders recommended papers from highest score to lowest score", () => {
