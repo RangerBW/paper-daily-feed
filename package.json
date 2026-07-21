@@ -27,7 +27,8 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "adm-zip": "0.6.0"
+    "adm-zip": "0.6.0",
+    "protobufjs": "7.6.5"
   },
   "trustedDependencies": [
     "onnxruntime-node"
