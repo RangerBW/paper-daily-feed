@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import packageMetadata from "../package.json";
 import { renderEmail, sendEmail } from "../src/email.js";
 import type { DeliveryConfig } from "../src/app-config.js";
 import type { RecommendedPaper } from "../src/types.js";
@@ -37,9 +38,9 @@ describe("renderEmail", () => {
     expect(html).toContain("Abstract excerpt");
     expect(html).toContain("Public transit accessibility and climate resilience in neighborhoods.");
     expect(html).toContain("https://example.test/transit");
-    expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed");
+    expect(html).toContain(packageMetadata.homepage);
     expect(html).toContain(">Unsubscribe</a>");
-    expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed#customization");
+    expect(html).toContain(`${packageMetadata.homepage}#customization`);
     expect(html).toContain('lang="en"');
     expect(html).toContain("Today's papers, with a little wonder.");
     expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');

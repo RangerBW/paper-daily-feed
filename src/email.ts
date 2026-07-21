@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import packageMetadata from "../package.json";
 import type { DeliveryConfig } from "./app-config.js";
 import type { DailyRomance } from "./daily-romance.js";
 import type { RecommendedPaper } from "./types.js";
@@ -172,8 +173,8 @@ export function renderEmail(
             ${content}
             <tr>
               <td align="center" style="padding: 18px 2px 4px 2px; text-align: center; color: #6e6e73; font-size: 13px; line-height: 1.6;">
-                <p style="margin: 0;">Built with <a href="https://github.com/nehSgnaiL/paper-daily-feed" style="color: #007aff; font-weight: 700; text-decoration: none;">paper-daily-feed</a> by <a href="https://nehsgnail.github.io/" style="color: #007aff; font-weight: 700; text-decoration: none;">nehSgnaiL</a>.</p>
-                <p style="margin: 8px 0 0 0;"><a href="https://github.com/nehSgnaiL/paper-daily-feed#customization" style="color: inherit; font-size: 11px; text-decoration: underline;">Unsubscribe</a></p>
+                <p style="margin: 0;">Built with <a href="${packageMetadata.homepage}" style="color: #007aff; font-weight: 700; text-decoration: none;">paper-daily-feed</a> by <a href="https://nehsgnail.github.io/" style="color: #007aff; font-weight: 700; text-decoration: none;">nehSgnaiL</a>.</p>
+                <p style="margin: 8px 0 0 0;"><a href="${packageMetadata.homepage}#customization" style="color: inherit; font-size: 11px; text-decoration: underline;">Unsubscribe</a></p>
               </td>
             </tr>
           </table>

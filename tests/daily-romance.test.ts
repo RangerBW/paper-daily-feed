@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, spyOn } from "bun:test";
+import packageMetadata from "../package.json";
 import {
   fetchDailyRomance,
   fetchHitokotoRomance,
@@ -37,8 +38,11 @@ describe("daily romance sources", () => {
 
   it("accepts a compact English quotation from ZenQuotes", async () => {
     const romance = await fetchZenQuoteRomance({
-      fetch: (async (input) => {
+      fetch: (async (input, init) => {
         expect(String(input)).toBe("https://zenquotes.io/api/random");
+        expect(init?.headers).toEqual({
+          "User-Agent": `paper-daily-feed/${packageMetadata.version} (${packageMetadata.homepage})`
+        });
         return Response.json([
           {
             q: "The quieter you become, the more you are able to hear.",
@@ -88,27 +92,33 @@ describe("daily romance sources", () => {
 
   it("chooses each source with equal probability and falls back to the other source", async () => {
     const calls: string[] = [];
-    const fetchImplementation = (async (input) => {
-      const url = String(input);
-      calls.push(url);
-      if (url.includes("zenquotes")) return new Response("unavailable", { status: 503 });
-      return Response.json({
-        hitokoto: "今晚的月色真美。",
-        from: "网络",
-        from_who: null,
-        uuid: "fallback-id"
+    const infoSpy = spyOn(console, "info").mockImplementation(() => undefined);
+    try {
+      const fetchImplementation = (async (input) => {
+        const url = String(input);
+        calls.push(url);
+        if (url.includes("zenquotes")) return new Response("unavailable", { status: 503 });
+        return Response.json({
+          hitokoto: "今晚的月色真美。",
+          from: "网络",
+          from_who: null,
+          uuid: "fallback-id"
+        });
+      }) as typeof fetch;
+
+      const romance = await fetchDailyRomance({
+        fetch: fetchImplementation,
+        random: () => 0.75
       });
-    }) as typeof fetch;
 
-    const romance = await fetchDailyRomance({
-      fetch: fetchImplementation,
-      random: () => 0.75
-    });
-
-    expect(calls).toEqual([
-      "https://zenquotes.io/api/random",
-      "https://v1.hitokoto.cn/?encode=json&max_length=42"
-    ]);
-    expect(romance?.text).toBe("今晚的月色真美。");
+      expect(calls).toEqual([
+        "https://zenquotes.io/api/random",
+        "https://v1.hitokoto.cn/?encode=json&max_length=42"
+      ]);
+      expect(romance?.text).toBe("今晚的月色真美。");
+      expect(infoSpy).toHaveBeenCalledWith("Fetched daily romance from 一言.");
+    } finally {
+      infoSpy.mockRestore();
+    }
   });
 });

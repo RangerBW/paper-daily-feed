@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import packageMetadata from "../package.json";
 
 import { renderMaintenanceEmail, sendMaintenanceNotification } from "../src/maintenance.js";
 
@@ -25,6 +26,7 @@ describe("renderMaintenanceEmail", () => {
     expect(html).toContain("Workflows");
     expect(html).toContain(".github/workflows/daily.yml");
     expect(html).toContain("https://github.com/reader/paper-daily-feed/actions/runs/42");
+    expect(html).toContain(packageMetadata.homepage);
   });
 
   it("escapes repository-provided details", () => {
