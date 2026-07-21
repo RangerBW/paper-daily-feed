@@ -16,6 +16,9 @@ jobs:
   recommend:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: paper-daily-feed-state
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -57,7 +60,7 @@ jobs:
       - name: Typecheck
         run: bun run build
 
-      - name: Load delivery history
+      - name: Load feed state
         run: |
           set -euo pipefail
 

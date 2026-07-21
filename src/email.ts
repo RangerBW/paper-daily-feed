@@ -1,9 +1,10 @@
 import nodemailer from "nodemailer";
 import type { DeliveryConfig } from "./app-config.js";
+import type { DailyRomance } from "./daily-romance.js";
 import type { RecommendedPaper } from "./types.js";
 
 const ABSTRACT_EXCERPT_LIMIT = 280;
-const EMAIL_PREHEADER = "Daily paper recommendations selected for your research interests.";
+const EMAIL_PREHEADER = "Today's papers, with a little wonder.";
 const EMAIL_SENDER_NAME = "Daily Paper Feeds";
 const EMAIL_WIDTH = 600;
 
@@ -113,9 +114,34 @@ function renderPaper(paper: RenderablePaper): string {
         </tr>`;
 }
 
-export function renderEmail(papers: RecommendedPaper[]): string;
-export function renderEmail(papers: RenderablePaper[]): string;
-export function renderEmail(papers: RenderablePaper[]): string {
+function renderDailyRomance(romance: DailyRomance | null | undefined): string {
+  if (!romance) return "";
+  const attribution = [
+    romance.author,
+    romance.sourceTitle === romance.author ? "" : romance.sourceTitle
+  ]
+    .filter(Boolean)
+    .map(escapeHtml)
+    .join(" · ");
+  return `<p style="margin: 16px auto 0 auto; max-width: 500px; color: #424245; font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.55;">&ldquo;${escapeHtml(
+    romance.text
+  )}&rdquo;</p>
+                <p style="margin: 6px auto 0 auto; max-width: 500px; color: #6e6e73; font-size: 12px; line-height: 1.4;">&mdash; ${attribution} · <a href="${escapeHtml(
+                  romance.sourceUrl
+                )}" style="color: inherit; text-decoration: underline;">${escapeHtml(
+                  romance.sourceName
+                )}</a></p>`;
+}
+
+export function renderEmail(
+  papers: RecommendedPaper[],
+  romance?: DailyRomance | null
+): string;
+export function renderEmail(papers: RenderablePaper[], romance?: DailyRomance | null): string;
+export function renderEmail(
+  papers: RenderablePaper[],
+  romance?: DailyRomance | null
+): string {
   const sortedPapers = [...papers].sort((left, right) => right.score - left.score);
   const content =
     sortedPapers.length === 0
@@ -139,9 +165,8 @@ export function renderEmail(papers: RenderablePaper[]): string {
           <table role="presentation" width="${EMAIL_WIDTH}" cellpadding="0" cellspacing="0" border="0" align="center" style="width: 100%; max-width: ${EMAIL_WIDTH}px; border-collapse: collapse;">
             <tr>
               <td align="center" style="padding: 10px 2px 26px 2px; text-align: center;">
-                <p style="margin: 0 0 8px 0; color: #007aff; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">Research Bulletin</p>
                 <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif; font-size: 36px; line-height: 1.12; margin: 0; color: #007aff; letter-spacing: 0;">Daily paper feeds</h1>
-                <p style="margin: 12px 0 0 0; color: #6e6e73; font-size: 15px; line-height: 1.55;">A recommendation of papers based on your research interests.</p>
+                ${renderDailyRomance(romance)}
               </td>
             </tr>
             ${content}

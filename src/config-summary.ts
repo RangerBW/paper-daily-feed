@@ -22,6 +22,7 @@ export function configSummaryLines(config: AppConfig): string[] {
     `- metadataRepair: enabled=${config.metadataRepair.enabled}, model=${config.metadataRepair.model}, timeoutMs=${config.metadataRepair.timeoutMs}`,
     `- metadataEnrichment: enabled=${config.metadataEnrichment.enabled}, crossref=${config.metadataEnrichment.crossref.enabled}`,
     `- summary: enabled=${config.summary.enabled}, model=${config.summary.model}, language=${config.summary.language}`,
+    `- dailyRomance: enabled=${config.dailyRomance.enabled}`,
     `- delivery: mode=${config.delivery.mode}, from=${config.delivery.from || "(empty)"}, to=${config.delivery.to || "(empty)"}, smtpHost=${config.delivery.smtpHost || "(empty)"}, smtpPort=${config.delivery.smtpPort}`,
     `- runtime: debug=${config.runtime.debug}, sendEmpty=${config.runtime.sendEmpty}`
   ];

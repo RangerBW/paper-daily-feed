@@ -18,7 +18,7 @@ const recommendation: RecommendedPaper = {
   matchContext: null
 };
 
-const config: Pick<AppConfig, "summary" | "delivery" | "runtime"> = {
+const config: Pick<AppConfig, "summary" | "dailyRomance" | "delivery" | "runtime"> = {
   summary: {
     enabled: true,
     baseUrl: "https://api.example.test/v1",
@@ -26,6 +26,9 @@ const config: Pick<AppConfig, "summary" | "delivery" | "runtime"> = {
     apiKey: "key",
     language: "Chinese",
     maxTokens: 128
+  },
+  dailyRomance: {
+    enabled: true
   },
   delivery: {
     mode: "smtp",
@@ -49,5 +52,33 @@ describe("Recommendation Delivery", () => {
 
     expect(result.sent).toBe(false);
     expect(result.html).toContain("Original abstract retained when summary generation fails.");
+  });
+
+  it("fetches a random quotation when daily romance is enabled", async () => {
+    const result = await deliverRecommendations(
+      [recommendation],
+      "preview-email",
+      { ...config, summary: { ...config.summary, enabled: false } },
+      {
+        filterUndeliveredPapers: (papers) => papers,
+        confirmSuccessfulDelivery: () => undefined
+      },
+      {},
+      new Date("2026-07-21T23:00:00.000Z"),
+      {
+        sendEmail: mock(),
+        fetchDailyRomance: mock(async () => ({
+          text: "The quieter you become, the more you are able to hear.",
+          author: "Rumi",
+          sourceTitle: "",
+          sourceUrl: "https://zenquotes.io/",
+          sourceName: "ZenQuotes"
+        }))
+      }
+    );
+
+    expect(result.html).toContain("The quieter you become, the more you are able to hear.");
+    expect(result.html).toContain("Rumi");
+    expect(result.html).toContain(">ZenQuotes</a>");
   });
 });

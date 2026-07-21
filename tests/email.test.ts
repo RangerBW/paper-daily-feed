@@ -41,7 +41,7 @@ describe("renderEmail", () => {
     expect(html).toContain(">Unsubscribe</a>");
     expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed#customization");
     expect(html).toContain('lang="en"');
-    expect(html).toContain("Daily paper recommendations selected for your research interests.");
+    expect(html).toContain("Today's papers, with a little wonder.");
     expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');
     expect(html).toContain('<table role="presentation" width="600"');
     expect(html).toContain('align="center"');
@@ -52,6 +52,27 @@ describe("renderEmail", () => {
 
   it("renders a no-paper message for an empty digest", () => {
     expect(renderEmail([])).toContain("No recommended papers today");
+  });
+
+  it("replaces repetitive header copy with a sourced daily quotation", () => {
+    const html = renderEmail([], {
+      text: "空山新雨后，天气晚来秋。",
+      author: "王维",
+      sourceTitle: "山居秋暝",
+      sourceUrl: "https://hitokoto.cn?uuid=example",
+      sourceName: "一言"
+    });
+
+    expect(html).toContain("空山新雨后，天气晚来秋。");
+    expect(html).toContain("王维");
+    expect(html).toContain(">一言</a>");
+    expect(html).toContain("山居秋暝");
+    expect(html).toContain("https://hitokoto.cn?uuid=example");
+    expect(html).not.toContain("Research Bulletin");
+    expect(html).not.toContain(
+      "A recommendation of papers based on your research interests."
+    );
+    expect(html).not.toContain("Anonymous");
   });
 
   it("renders recommended papers from highest score to lowest score", () => {

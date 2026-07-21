@@ -1,5 +1,6 @@
 import type { AppConfig, SummaryConfig } from "./app-config.js";
 import type { DeliveryHistorySession } from "./delivery-history.js";
+import { fetchDailyRomance, type DailyRomance } from "./daily-romance.js";
 import { renderEmail, sendEmail } from "./email.js";
 import { createOpenAISummarizer, summarizeRecommendedPapers } from "./summary.js";
 import type { RecommendedPaper } from "./types.js";
@@ -17,6 +18,7 @@ export type RecommendationDeliveryResult = {
 
 export type RecommendationDeliveryDependencies = {
   sendEmail: typeof sendEmail;
+  fetchDailyRomance?: typeof fetchDailyRomance;
 };
 
 const defaultDependencies: RecommendationDeliveryDependencies = { sendEmail };
@@ -65,9 +67,12 @@ export async function summarizeRecommendations(
   return recommendations;
 }
 
-export function renderRecommendationEmail(recommendations: RecommendedPaper[]): string {
+export function renderRecommendationEmail(
+  recommendations: RecommendedPaper[],
+  romance: DailyRomance | null = null
+): string {
   console.log("Rendering email HTML...");
-  const html = renderEmail(recommendations);
+  const html = renderEmail(recommendations, romance);
   console.log("Rendered email HTML.");
   return html;
 }
@@ -75,7 +80,7 @@ export function renderRecommendationEmail(recommendations: RecommendedPaper[]): 
 export async function deliverRecommendations(
   recommendations: RecommendedPaper[],
   mode: DeliveryMode,
-  config: Pick<AppConfig, "summary" | "delivery" | "runtime">,
+  config: Pick<AppConfig, "summary" | "dailyRomance" | "delivery" | "runtime">,
   deliveryHistory: DeliveryHistorySession,
   env: Env = process.env,
   now = new Date(),
@@ -87,7 +92,10 @@ export async function deliverRecommendations(
   }
 
   const prepared = await summarizeRecommendations(recommendations, config.summary, env);
-  const html = renderRecommendationEmail(prepared);
+  const romance = config.dailyRomance.enabled
+    ? await (dependencies.fetchDailyRomance ?? fetchDailyRomance)()
+    : null;
+  const html = renderRecommendationEmail(prepared, romance);
   if (mode === "preview-email" || config.runtime.debug) {
     if (config.runtime.debug && mode === "run") {
       console.log(`Debug mode enabled. Skipping email send for ${prepared.length} recommendations.`);

@@ -149,6 +149,10 @@
     // Can skip. Max completion tokens. Empty/omitted defaults to 1024.
     "maxTokens": 1024
   },
+  "dailyRomance": {
+    // For daily romance inspiration. Can skip. Enabled by default.
+    "enabled": true
+  },
   "delivery": {
     // Can skip the whole delivery section if your GitHub Secrets use the default names:
     // SENDER, RECEIVER, SMTP_SERVER, SMTP_PORT, SENDER_PASSWORD.

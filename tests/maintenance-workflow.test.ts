@@ -3,6 +3,13 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "bun:test";
 
 describe("maintenance workflow guidance", () => {
+  it("does not spend weekly runtime preparing daily quotations", () => {
+    const workflow = readFileSync(".github/workflows/maintenance.yml", "utf8");
+
+    expect(workflow).not.toContain("daily-romance");
+    expect(workflow).not.toContain("prepare-daily-romance");
+  });
+
   it("explains how to configure workflow-file sync when workflow updates are skipped", () => {
     const workflow = readFileSync(".github/workflows/maintenance.yml", "utf8");
 

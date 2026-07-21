@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import type { DailyRomanceConfig } from "./daily-romance.js";
 
 export type AppConfig = {
   interests: {
@@ -14,6 +15,7 @@ export type AppConfig = {
   metadataRepair: MetadataRepairConfig;
   metadataEnrichment: MetadataEnrichmentConfig;
   summary: SummaryConfig;
+  dailyRomance: DailyRomanceConfig;
   delivery: DeliveryConfig;
   runtime: {
     debug: boolean;
@@ -383,6 +385,7 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
   const metadataEnrichment = asRecord(rawConfig.metadataEnrichment);
   const metadataEnrichmentCrossref = asRecord(metadataEnrichment.crossref);
   const summary = asRecord(rawConfig.summary);
+  const dailyRomance = asRecord(rawConfig.dailyRomance);
   const delivery = asRecord(rawConfig.delivery);
   const runtime = asRecord(rawConfig.runtime);
 
@@ -454,6 +457,9 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
       apiKey: asString(summary.apiKey, envValue(env, "OPENAI_API_KEY")),
       language: asString(summary.language, "English"),
       maxTokens: asNumber(summary.maxTokens, 1024)
+    },
+    dailyRomance: {
+      enabled: asBoolean(dailyRomance.enabled, true)
     },
     delivery: {
       mode: "smtp",

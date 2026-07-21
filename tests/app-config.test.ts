@@ -294,6 +294,9 @@ describe("loadAppConfig", () => {
         language: "English",
         maxTokens: 1024
       },
+      dailyRomance: {
+        enabled: true
+      },
       delivery: {
         mode: "smtp",
         from: "",
