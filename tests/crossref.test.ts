@@ -66,7 +66,7 @@ describe("Crossref metadata", () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           Accept: "application/json",
-          "User-Agent": `paper-daily-feed/${packageMetadata.version} (+https://github.com/nehSgnaiL/paper-daily-feed)`
+          "User-Agent": `paper-daily-feed/${packageMetadata.version} (+${packageMetadata.homepage})`
         })
       })
     );

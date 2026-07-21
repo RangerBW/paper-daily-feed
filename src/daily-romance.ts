@@ -1,3 +1,5 @@
+import packageMetadata from "../package.json";
+
 const HITOKOTO_API = "https://v1.hitokoto.cn/";
 const HITOKOTO_SOURCE = "https://hitokoto.cn";
 const HITOKOTO_MAX_LENGTH = 42;
@@ -6,6 +8,7 @@ const ZENQUOTES_SOURCE = "https://zenquotes.io/";
 const ZENQUOTES_MAX_LENGTH = 96;
 const ZENQUOTES_MAX_WORDS = 18;
 const REQUEST_TIMEOUT_MS = 8_000;
+const USER_AGENT = `paper-daily-feed/${packageMetadata.version} (${packageMetadata.homepage})`;
 
 export type DailyRomanceConfig = {
   enabled: boolean;
@@ -58,7 +61,7 @@ async function responseJson(
 ): Promise<unknown> {
   const response = await fetchImplementation(url, {
     headers: {
-      "User-Agent": "paper-daily-feed/0.1 (https://github.com/nehSgnaiL/paper-daily-feed)"
+      "User-Agent": USER_AGENT
     },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
   });
@@ -130,7 +133,9 @@ export async function fetchDailyRomance(
 
   for (const source of sources) {
     try {
-      return await source(sourceOptions);
+      const romance = await source(sourceOptions);
+      console.info(`Fetched daily romance from ${romance.sourceName}.`);
+      return romance;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(`Daily romance source skipped: ${message}`);
