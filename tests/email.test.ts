@@ -68,11 +68,25 @@ describe("renderEmail", () => {
     expect(html).toContain(">一言</a>");
     expect(html).toContain("山居秋暝");
     expect(html).toContain("https://hitokoto.cn?uuid=example");
+    expect(html).toContain("serif; font-size: 16px; line-height: 1.55;");
+    expect(html).toContain("font-size: 12px; line-height: 1.4; text-align: right;");
     expect(html).not.toContain("Research Bulletin");
     expect(html).not.toContain(
       "A recommendation of papers based on your research interests."
     );
     expect(html).not.toContain("Anonymous");
+  });
+
+  it("keeps English daily quotations at the larger Latin font size", () => {
+    const html = renderEmail([], {
+      text: "The quieter you become, the more you are able to hear.",
+      author: "Rumi",
+      sourceTitle: "",
+      sourceUrl: "https://zenquotes.io/",
+      sourceName: "ZenQuotes"
+    });
+
+    expect(html).toContain("serif; font-size: 17px; line-height: 1.55;");
   });
 
   it("renders recommended papers from highest score to lowest score", () => {

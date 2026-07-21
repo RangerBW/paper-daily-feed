@@ -116,6 +116,7 @@ function renderPaper(paper: RenderablePaper): string {
 
 function renderDailyRomance(romance: DailyRomance | null | undefined): string {
   if (!romance) return "";
+  const quoteFontSize = /[\u3400-\u9fff]/u.test(romance.text) ? 16 : 17;
   const attribution = [
     romance.author,
     romance.sourceTitle === romance.author ? "" : romance.sourceTitle
@@ -123,10 +124,10 @@ function renderDailyRomance(romance: DailyRomance | null | undefined): string {
     .filter(Boolean)
     .map(escapeHtml)
     .join(" · ");
-  return `<p style="margin: 16px auto 0 auto; max-width: 500px; color: #424245; font-family: Georgia, 'Times New Roman', serif; font-size: 17px; line-height: 1.55;">&ldquo;${escapeHtml(
+  return `<p style="margin: 16px auto 0 auto; max-width: 500px; color: #424245; font-family: Georgia, 'Times New Roman', serif; font-size: ${quoteFontSize}px; line-height: 1.55;">&ldquo;${escapeHtml(
     romance.text
   )}&rdquo;</p>
-                <p style="margin: 6px auto 0 auto; max-width: 500px; color: #6e6e73; font-size: 12px; line-height: 1.4;">&mdash; ${attribution} · <a href="${escapeHtml(
+                <p style="margin: 6px auto 0 auto; max-width: 500px; color: #6e6e73; font-size: 12px; line-height: 1.4; text-align: right;">&mdash; ${attribution} · <a href="${escapeHtml(
                   romance.sourceUrl
                 )}" style="color: inherit; text-decoration: underline;">${escapeHtml(
                   romance.sourceName
