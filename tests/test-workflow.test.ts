@@ -12,7 +12,7 @@ describe("test paper feeds workflow", () => {
     expect(workflow).toContain("run: bun src/index.ts run");
   });
 
-  it("centralizes the pinned Bun runtime, dependency cache, and frozen install", () => {
+  it("centralizes the pinned Bun runtime and frozen install", () => {
     const setupAction = readFileSync(".github/actions/setup-bun/action.yml", "utf8");
     const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
       packageManager?: string;
@@ -34,10 +34,8 @@ describe("test paper feeds workflow", () => {
     expect(setupAction).toContain("uses: oven-sh/setup-bun@v2");
     expect(setupAction).not.toContain("bun-version:");
     expect(setupAction).toContain("id: setup");
-    expect(setupAction).toContain("run: echo \"dir=$(bun pm cache)\" >> \"$GITHUB_OUTPUT\"");
-    expect(setupAction).toContain("path: ${{ steps.cache_path.outputs.dir }}");
-    expect(setupAction).toContain("steps.setup.outputs['bun-version']");
-    expect(setupAction).toContain("hashFiles('bun.lock')");
+    expect(setupAction).not.toContain("bun pm cache");
+    expect(setupAction).not.toContain("actions/cache");
     expect(setupAction).toContain("ONNXRUNTIME_NODE_INSTALL: skip");
     expect(setupAction).toContain("run: bun ci");
     expect(bunfig).toContain('auto = "disable"');
