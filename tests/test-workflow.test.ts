@@ -31,9 +31,9 @@ describe("test paper feeds workflow", () => {
     expect(packageJson.engines).toBeUndefined();
     expect(packageJson.dependencies).not.toHaveProperty("js-yaml");
     expect(packageJson.devDependencies).not.toHaveProperty("@types/js-yaml");
-    expect(setupAction).toContain("uses: oven-sh/setup-bun@v2");
+    expect(setupAction).toContain(`run: npm install -g bun@${bunVersion}`);
+    expect(setupAction).not.toContain("uses: oven-sh/setup-bun");
     expect(setupAction).not.toContain("bun-version:");
-    expect(setupAction).toContain("id: setup");
     expect(setupAction).not.toContain("bun pm cache");
     expect(setupAction).not.toContain("actions/cache");
     expect(setupAction).toContain("ONNXRUNTIME_NODE_INSTALL: skip");
