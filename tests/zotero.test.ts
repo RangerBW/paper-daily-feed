@@ -215,4 +215,39 @@ describe("fetchZoteroInterestDocuments", () => {
     expect(logs).toContain("[Zotero items/top] 1/2 [##########----------] 50%");
     expect(logs).toContain("[Zotero items/top] 2/2 [####################] 100%");
   });
+
+  it("retries a temporary Zotero connection failure", async () => {
+    const attempts = new Map<string, number>();
+    stubFetch(mock(async (input: string | URL | Request) => {
+      const url = new URL(String(input));
+      const resource = url.pathname.endsWith("/items/top") ? "items/top" : "collections";
+      const attempt = (attempts.get(resource) ?? 0) + 1;
+      attempts.set(resource, attempt);
+
+      if (resource === "items/top" && attempt === 1) {
+        throw new Error("Unable to connect");
+      }
+
+      const body = resource === "items/top"
+        ? [{ data: { itemType: "journalArticle", title: "Recovered paper", abstractNote: "Urban mobility." } }]
+        : [];
+      return Response.json(body, { headers: { "Total-Results": String(body.length) } });
+    }));
+
+    const documents = await fetchZoteroInterestDocuments(
+      {
+        enabled: true,
+        userId: "123",
+        apiKey: "secret",
+        libraryType: "user",
+        includeCollections: [],
+        excludeCollections: []
+      },
+      {},
+      { retryCount: 2, retryDelayMs: 0 }
+    );
+
+    expect(attempts.get("items/top")).toBe(2);
+    expect(documents.map((document) => document.title)).toEqual(["Recovered paper"]);
+  });
 });
