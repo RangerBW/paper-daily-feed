@@ -19,8 +19,12 @@ Deploy the project as a fork under the user's own GitHub account. Configure, ena
 
 - Use the user's preferred language throughout. Ask one simple question at a time and explain what is needed.
 - Start by asking which discipline the user works in. Based on the answer, offer a few relevant directions and narrow down their research field one simple question at a time.
-- Once the research field is clear, ask which journals they follow or want to receive, and use those answers to choose the paper sources.
-- The bundled journals mainly cover geography. For other disciplines, subscribe only to journals the user chooses and do not mix in geography journals. If the user has no journals in mind, help them clarify their preferences without broadening the subscription on their behalf.
+- Once the specific research field is clear, use web search to list the Top journals most relevant to that field.
+
+    Then ask which journals the user wants to subscribe to, add, or exclude, and use those answers to choose the paper sources.
+
+    Use journal or publisher RSS feeds, Crossref, and other available data sources to verify journal names, ISSNs, and available feeds. Present the final journal names for the user to confirm.
+- The bundled journals mainly cover geography. For other disciplines, subscribe only to journals the user confirms and do not mix in geography journals. If the user has no journals in mind, use the sources above to help identify candidates without broadening the subscription on their behalf.
 - After confirming discipline, field, and journals, ask whether the user wants Zotero and AI summaries before requesting those details.
 - The user should only provide choices and configuration details, and approve GitHub sign-in when required. Handle all other pages, commands, saving, and checks for them.
 - Prefer `gh` and complete as much as possible in the current conversation and terminal to minimize page switching.
@@ -34,7 +38,13 @@ Complete these items in order and check each one:
 - [ ] **Prepare the fork:** Find the user's existing fork or create it for them. Confirm that it belongs to the user and that the current account can manage it.
 - [ ] **Collect email settings:** Ask in turn for the receiving address, sending address, SMTP server, and port. When the sender password, app password, or authorization code is needed, open secure input rather than asking for it in chat.
 - [ ] **Choose discipline and field:** Ask for the discipline first, then offer broad field choices and narrow them progressively. Use the result to write a short research-interest summary.
-- [ ] **Choose journals:** Ask which journals the user follows and add them to `interests.profile.favoriteJournals`. For geography, select matching entries from `data/journals.config.ts` in `feeds.catalogSelections`. For other disciplines, default to `feeds.includeCatalog: false` and add available RSS feeds to `feeds.customRss`. Do not use an empty `catalogSelections` to mean “no bundled journals”; it means all bundled journals.
+- [ ] **Choose journals:** Search the web for the confirmed research field and first show the user the Top journals in the results that are most relevant to that field. Then ask which journals they want to subscribe to, add, or exclude.
+
+    Use journal or publisher RSS feeds, Crossref, and other available data sources to verify journal names, ISSNs, and feeds. After the user confirms the selection, add the journals to `interests.profile.favoriteJournals`.
+
+    For geography, select matching entries from `data/journals.config.ts` in `feeds.catalogSelections`. For other disciplines, default to `feeds.includeCatalog: false` and add available RSS feeds to `feeds.customRss`.
+
+    Do not use an empty `catalogSelections` to mean “no bundled journals”; it means all bundled journals.
 - [ ] **Choose interest sources:** Ask whether they use Zotero; if so, collect `ZOTERO_ID` and a read-only `ZOTERO_KEY`.
 - [ ] **Choose summary style:** Ask whether to create AI-generated TLDRs. If enabled, confirm the API URL, API key, model, and output language. Otherwise use the paper's original abstract.
 - [ ] **Save Secrets:** Save the required `RECEIVER`, `SENDER`, `SENDER_PASSWORD`, `SMTP_SERVER`, and `SMTP_PORT` in the target fork, plus `ZOTERO_ID`, `ZOTERO_KEY`, `OPENAI_BASE_URL`, and `OPENAI_API_KEY` for enabled features.

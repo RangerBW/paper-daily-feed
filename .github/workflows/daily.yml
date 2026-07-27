@@ -16,6 +16,9 @@ jobs:
   recommend:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: paper-daily-feed-state
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -57,7 +60,7 @@ jobs:
       - name: Typecheck
         run: bun run build
 
-      - name: Load delivery history
+      - name: Load feed state
         run: |
           set -euo pipefail
 
@@ -99,15 +102,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          state_root="$(mktemp -d)"
+          state_worktree="${state_root}/state"
+          cleanup() {
+            git worktree remove --force "${state_worktree}" >/dev/null 2>&1 || true
+            rmdir "${state_root}" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
           if git show-ref --verify --quiet refs/remotes/origin/paper-daily-feed-state; then
-            git switch -C paper-daily-feed-state origin/paper-daily-feed-state
+            git worktree add --force -B paper-daily-feed-state "${state_worktree}" origin/paper-daily-feed-state
           else
-            git switch --orphan paper-daily-feed-state
-            git rm -rf . || true
+            git worktree add --detach "${state_worktree}" HEAD
+            git -C "${state_worktree}" switch --orphan paper-daily-feed-state
           fi
 
-          cp /tmp/paper-daily-feed-delivery-history.json .delivery-history.json
-          git add -f .delivery-history.json
-          git diff --cached --quiet && exit 0
-          git commit -m "chore: update delivery history"
-          git push origin paper-daily-feed-state
+          cp /tmp/paper-daily-feed-delivery-history.json "${state_worktree}/.delivery-history.json"
+          git -C "${state_worktree}" add -f .delivery-history.json
+          git -C "${state_worktree}" diff --cached --quiet && exit 0
+          git -C "${state_worktree}" commit -m "chore: update delivery history"
+          git -C "${state_worktree}" push origin HEAD:paper-daily-feed-state

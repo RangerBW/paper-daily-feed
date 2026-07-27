@@ -31,6 +31,17 @@ type ZoteroPage<T> = {
   totalResults?: number;
 };
 
+type ZoteroFetchOptions = {
+  fetcher?: typeof fetch;
+  requestTimeoutMs?: number;
+  retryCount?: number;
+  retryDelayMs?: number;
+};
+
+const DEFAULT_ZOTERO_REQUEST_TIMEOUT_MS = 20_000;
+const DEFAULT_ZOTERO_RETRY_COUNT = 2;
+const DEFAULT_ZOTERO_RETRY_DELAY_MS = 1_000;
+
 const SUPPORTED_ITEM_TYPES = new Set(["journalArticle", "conferencePaper", "preprint"]);
 
 export function normalizeZoteroItem(item: ZoteroItem): CorpusPaper | null {
@@ -116,20 +127,61 @@ function zoteroLibraryPath(config: ZoteroLibraryConfig): string {
   return `https://api.zotero.org/${libraryPath}/${config.userId}`;
 }
 
-async function fetchZoteroPage<T>(config: ZoteroLibraryConfig, resource: string, start: number): Promise<ZoteroPage<T>> {
+function wait(ms: number): Promise<void> {
+  return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+}
+
+function retryableZoteroStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+async function fetchZoteroPage<T>(
+  config: ZoteroLibraryConfig,
+  resource: string,
+  start: number,
+  options: ZoteroFetchOptions
+): Promise<ZoteroPage<T>> {
   const url = new URL(`${zoteroLibraryPath(config)}/${resource}`);
   url.searchParams.set("format", "json");
   url.searchParams.set("limit", "100");
   url.searchParams.set("start", String(start));
 
-  const response = await fetch(url, {
-    headers: {
-      "Zotero-API-Key": config.apiKey
-    }
-  });
+  const fetcher = options.fetcher ?? fetch;
+  const requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_ZOTERO_REQUEST_TIMEOUT_MS;
+  const retryCount = options.retryCount ?? DEFAULT_ZOTERO_RETRY_COUNT;
+  const retryDelayMs = options.retryDelayMs ?? DEFAULT_ZOTERO_RETRY_DELAY_MS;
+  let response: Response | undefined;
 
-  if (!response.ok) {
-    throw new Error(`Zotero API request failed (${response.status} ${response.statusText}).`);
+  for (let attempt = 0; attempt <= retryCount; attempt += 1) {
+    if (attempt > 0) {
+      console.warn(`Retrying Zotero ${resource} request (${attempt}/${retryCount})...`);
+      await wait(retryDelayMs * attempt);
+    }
+
+    try {
+      response = await fetcher(url, {
+        headers: {
+          "Zotero-API-Key": config.apiKey
+        },
+        signal: AbortSignal.timeout(requestTimeoutMs)
+      });
+    } catch (error) {
+      if (attempt >= retryCount) {
+        throw error;
+      }
+      continue;
+    }
+
+    if (response.ok) {
+      break;
+    }
+    if (attempt >= retryCount || !retryableZoteroStatus(response.status)) {
+      throw new Error(`Zotero API request failed (${response.status} ${response.statusText}).`);
+    }
+  }
+
+  if (!response?.ok) {
+    throw new Error("Zotero API request failed after retries.");
   }
 
   const totalResultsHeader = response.headers.get("total-results");
@@ -140,13 +192,17 @@ async function fetchZoteroPage<T>(config: ZoteroLibraryConfig, resource: string,
   };
 }
 
-async function fetchAllZoteroPages<T>(config: ZoteroLibraryConfig, resource: string): Promise<T[]> {
+async function fetchAllZoteroPages<T>(
+  config: ZoteroLibraryConfig,
+  resource: string,
+  options: ZoteroFetchOptions
+): Promise<T[]> {
   const allItems: T[] = [];
   const pageSize = 100;
   let progress: ReturnType<typeof createProgress> | undefined;
 
   for (let start = 0; ; start += pageSize) {
-    const page = await fetchZoteroPage<T>(config, resource, start);
+    const page = await fetchZoteroPage<T>(config, resource, start, options);
     const items = page.items;
     if (!progress) {
       const totalPages = page.totalResults === undefined ? undefined : Math.max(Math.ceil(page.totalResults / pageSize), 1);
@@ -189,7 +245,8 @@ function buildCollectionPathMap(collections: ZoteroCollection[]): Map<string, st
 
 export async function fetchZoteroInterestDocuments(
   config: ZoteroInterestConfig,
-  _env: Record<string, string | undefined> = process.env
+  _env: Record<string, string | undefined> = process.env,
+  options: ZoteroFetchOptions = {}
 ): Promise<InterestDocument[]> {
   const userId = config.userId.trim();
   const apiKey = config.apiKey.trim();
@@ -203,8 +260,8 @@ export async function fetchZoteroInterestDocuments(
     libraryType: config.libraryType
   };
   const [items, collections] = await Promise.all([
-    fetchAllZoteroPages<ZoteroItem>(libraryConfig, "items/top"),
-    fetchAllZoteroPages<ZoteroCollection>(libraryConfig, "collections")
+    fetchAllZoteroPages<ZoteroItem>(libraryConfig, "items/top", options),
+    fetchAllZoteroPages<ZoteroCollection>(libraryConfig, "collections", options)
   ]);
   const collectionPaths = buildCollectionPathMap(collections);
   const corpus = items

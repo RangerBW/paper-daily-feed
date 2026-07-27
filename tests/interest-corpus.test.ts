@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, spyOn } from "bun:test";
 import type { AppConfig, ProfileInterestConfig, ZoteroInterestConfig } from "../src/app-config.js";
 import { buildInterestCorpus } from "../src/interest-corpus.js";
 import { buildProfileInterestDocuments } from "../src/interest-profile.js";
@@ -259,5 +259,53 @@ describe("buildInterestCorpus", () => {
 
     expect(fetchCalls).toBe(0);
     expect(documents.map((document) => document.source)).toEqual(["profile", "profile"]);
+  });
+
+  it("keeps usable profile documents when Zotero is temporarily unavailable", async () => {
+    const warning = spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const documents = await buildInterestCorpus(
+      interestsConfig({
+        profile: {
+          summary: "Profile fallback.",
+          topics: ["urban mobility"]
+        },
+        zotero: {
+          enabled: true,
+          userId: "123",
+          apiKey: "secret"
+        }
+      }),
+      {},
+      async () => {
+        throw new Error("Unable to connect to Zotero");
+      }
+    );
+
+    expect(documents.map((document) => document.source)).toEqual(["profile", "profile"]);
+    expect(warning).toHaveBeenCalledWith(
+      "Zotero interest documents unavailable; continuing with 2 profile documents. Cause: Unable to connect to Zotero"
+    );
+  });
+
+  it("fails when Zotero is unavailable and no other interest documents exist", async () => {
+    await expect(
+      buildInterestCorpus(
+        interestsConfig({
+          profile: {
+            enabled: false
+          },
+          zotero: {
+            enabled: true,
+            userId: "123",
+            apiKey: "secret"
+          }
+        }),
+        {},
+        async () => {
+          throw new Error("Unable to connect to Zotero");
+        }
+      )
+    ).rejects.toThrow("Unable to connect to Zotero");
   });
 });

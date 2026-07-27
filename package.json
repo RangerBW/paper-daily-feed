@@ -1,6 +1,7 @@
 {
   "name": "paper-daily-feed",
   "version": "0.1.4",
+  "homepage": "https://github.com/nehSgnaiL/paper-daily-feed",
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",

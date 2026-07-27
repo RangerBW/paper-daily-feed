@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import packageMetadata from "../package.json";
 import { renderEmail, sendEmail } from "../src/email.js";
 import type { DeliveryConfig } from "../src/app-config.js";
 import type { RecommendedPaper } from "../src/types.js";
@@ -37,11 +38,11 @@ describe("renderEmail", () => {
     expect(html).toContain("Abstract excerpt");
     expect(html).toContain("Public transit accessibility and climate resilience in neighborhoods.");
     expect(html).toContain("https://example.test/transit");
-    expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed");
+    expect(html).toContain(packageMetadata.homepage);
     expect(html).toContain(">Unsubscribe</a>");
-    expect(html).toContain("https://github.com/nehSgnaiL/paper-daily-feed#customization");
+    expect(html).toContain(`${packageMetadata.homepage}#customization`);
     expect(html).toContain('lang="en"');
-    expect(html).toContain("Daily paper recommendations selected for your research interests.");
+    expect(html).toContain("Today's papers, with a little wonder.");
     expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');
     expect(html).toContain('<table role="presentation" width="600"');
     expect(html).toContain('align="center"');
@@ -52,6 +53,44 @@ describe("renderEmail", () => {
 
   it("renders a no-paper message for an empty digest", () => {
     expect(renderEmail([])).toContain("No recommended papers today");
+  });
+
+  it("replaces repetitive header copy with a sourced daily quotation", () => {
+    const html = renderEmail([], {
+      text: "空山新雨后，天气晚来秋。",
+      author: "王维",
+      sourceTitle: "山居秋暝",
+      sourceUrl: "https://hitokoto.cn?uuid=example",
+      sourceName: "一言"
+    });
+
+    expect(html).toContain("空山新雨后，天气晚来秋。");
+    expect(html).toContain("王维");
+    expect(html).toContain(">一言</a>");
+    expect(html).toContain("山居秋暝");
+    expect(html).toContain("https://hitokoto.cn?uuid=example");
+    expect(html).toContain(
+      "margin: 26px auto 0 auto; max-width: 480px; color: #6e6e73; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.5;"
+    );
+    expect(html).toContain("padding: 10px 2px 26px 2px; text-align: center;");
+    expect(html).toContain("font-size: 11px; line-height: 1.4; text-align: right;");
+    expect(html).not.toContain("Research Bulletin");
+    expect(html).not.toContain(
+      "A recommendation of papers based on your research interests."
+    );
+    expect(html).not.toContain("Anonymous");
+  });
+
+  it("keeps English daily quotations visually subordinate to paper titles", () => {
+    const html = renderEmail([], {
+      text: "The quieter you become, the more you are able to hear.",
+      author: "Rumi",
+      sourceTitle: "",
+      sourceUrl: "https://zenquotes.io/",
+      sourceName: "ZenQuotes"
+    });
+
+    expect(html).toContain("serif; font-size: 14px; line-height: 1.5;");
   });
 
   it("renders recommended papers from highest score to lowest score", () => {

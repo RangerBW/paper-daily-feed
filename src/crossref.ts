@@ -52,7 +52,7 @@ type FetchCrossrefOptions = {
 };
 
 const DOI_PATTERN = /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
-const USER_AGENT = `paper-daily-feed/${packageMetadata.version} (+https://github.com/nehSgnaiL/paper-daily-feed)`;
+const USER_AGENT = `paper-daily-feed/${packageMetadata.version} (+${packageMetadata.homepage})`;
 
 export function findDoi(text: string | undefined): string | undefined {
   const match = text?.match(DOI_PATTERN)?.[0];

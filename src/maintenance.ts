@@ -1,3 +1,4 @@
+import packageMetadata from "../package.json";
 import type { DeliveryConfig } from "./app-config.js";
 import { sendEmail } from "./email.js";
 
@@ -22,7 +23,7 @@ type NoticeContent = {
 };
 
 const EMAIL_WIDTH = 600;
-const UPSTREAM_URL = "https://github.com/nehSgnaiL/paper-daily-feed";
+const UPSTREAM_URL = packageMetadata.homepage;
 
 function escapeHtml(value: string): string {
   return value

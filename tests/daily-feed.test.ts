@@ -25,7 +25,8 @@ const metadataRepairMock = {
   repairRecommendationMetadata: mock()
 };
 const emailMock = {
-  sendEmail: mock()
+  sendEmail: mock(),
+  fetchDailyRomance: mock(async () => null)
 };
 const historySessionMock = {
   filterUndeliveredPapers: mock(),
@@ -107,6 +108,9 @@ function config(overrides: Partial<AppConfig> = {}): AppConfig {
       apiKey: "",
       language: "English",
       maxTokens: 1024
+    },
+    dailyRomance: {
+      enabled: true
     },
     delivery: {
       mode: "smtp",
