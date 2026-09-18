@@ -201,16 +201,30 @@ describe("loadAppConfig", () => {
     const config = loadAppConfig(
       {
         PAPER_LIMIT: "3",
-        RUNTIME_DEBUG: "false"
+        RUNTIME_DEBUG: "false",
+        SUMMARY_ENABLED: "true",
+        SUMMARY_LANGUAGE: "Chinese",
+        SUMMARY_MODEL: "gpt-5.4",
+        SUMMARY_MAX_TOKENS: "2048"
       },
       json({
         matching: { paperLimit: 10 },
-        runtime: { debug: true }
+        runtime: { debug: true },
+        summary: {
+          enabled: false,
+          language: "English",
+          model: "old-model",
+          maxTokens: 256
+        }
       })
     );
 
     expect(config.matching.paperLimit).toBe(3);
     expect(config.runtime.debug).toBe(false);
+    expect(config.summary.enabled).toBe(true);
+    expect(config.summary.language).toBe("Chinese");
+    expect(config.summary.model).toBe("gpt-5.4");
+    expect(config.summary.maxTokens).toBe(2048);
   });
 
   it("loads config/app.json when no explicit text or APP_CONFIG exists", () => {

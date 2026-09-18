@@ -90,6 +90,7 @@ export function createOpenAISummarizer(
               `Follow these output requirements exactly: ${config.language}`,
               "Use only claims supported by the supplied abstract or reliable source metadata.",
               "If no abstract or reliable source content is supplied, say that a reliable summary cannot be generated; do not infer methods, results, contributions, or conclusions from the title alone.",
+              "When the requested language is Chinese, write one concise paragraph of about 180-240 Chinese characters covering the background, method, key results, and contribution, but include only details supported by the supplied source.",
               "Do not write generic placeholders such as 'related field', 'core concepts', 'may focus on key problems', or 'method system/application scenario'."
             ].join(" ")
           },

@@ -61,6 +61,7 @@ describe("createOpenAISummarizer", () => {
     expect(String(requestInit?.body)).toContain("You write accurate academic paper summaries");
     expect(String(requestInit?.body)).toContain("Use only claims supported");
     expect(String(requestInit?.body)).toContain("do not infer methods, results, contributions");
+    expect(String(requestInit?.body)).toContain("180-240 Chinese characters");
     expect(String(requestInit?.body)).toContain("Chinese");
     expect(String(requestInit?.body)).toContain("Journal: Nature");
     expect(String(requestInit?.body)).toContain("URL: https://example.test/paper");

@@ -41,6 +41,8 @@ jobs:
           ZOTERO_KEY: ${{ secrets.ZOTERO_KEY }}
           OPENAI_BASE_URL: ${{ vars.OPENAI_BASE_URL || secrets.OPENAI_BASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUMMARY_ENABLED: true
+          SUMMARY_LANGUAGE: Chinese
           EMBEDDING_BASE_URL: ${{ vars.EMBEDDING_BASE_URL || secrets.EMBEDDING_BASE_URL }}
           EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
           SENDER: ${{ secrets.SENDER }}

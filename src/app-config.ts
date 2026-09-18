@@ -451,12 +451,12 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
       }
     },
     summary: {
-      enabled: asBoolean(summary.enabled, false),
+      enabled: asBoolean(configOrEnv(summary.enabled, env, "SUMMARY_ENABLED"), false),
       baseUrl: asString(summary.baseUrl, envValue(env, "OPENAI_BASE_URL", "https://api.openai.com/v1")),
-      model: asString(summary.model, "gpt-4o-mini"),
+      model: asString(configOrEnv(summary.model, env, "SUMMARY_MODEL"), "gpt-4o-mini"),
       apiKey: asString(summary.apiKey, envValue(env, "OPENAI_API_KEY")),
-      language: asString(summary.language, "English"),
-      maxTokens: asNumber(summary.maxTokens, 1024)
+      language: asString(configOrEnv(summary.language, env, "SUMMARY_LANGUAGE"), "English"),
+      maxTokens: asNumber(configOrEnv(summary.maxTokens, env, "SUMMARY_MAX_TOKENS"), 1024)
     },
     dailyRomance: {
       enabled: asBoolean(dailyRomance.enabled, true)
