@@ -452,9 +452,12 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
     },
     summary: {
       enabled: asBoolean(configOrEnv(summary.enabled, env, "SUMMARY_ENABLED"), false),
-      baseUrl: asString(summary.baseUrl, envValue(env, "OPENAI_BASE_URL", "https://api.openai.com/v1")),
+      baseUrl: asString(
+        configOrEnv(summary.baseUrl, env, "OPENAI_BASE_URL"),
+        envValue(env, "OPENAI_BASE_URL", "https://api.openai.com/v1")
+      ),
       model: asString(configOrEnv(summary.model, env, "SUMMARY_MODEL"), "gpt-4o-mini"),
-      apiKey: asString(summary.apiKey, envValue(env, "OPENAI_API_KEY")),
+      apiKey: asString(configOrEnv(summary.apiKey, env, "OPENAI_API_KEY"), envValue(env, "OPENAI_API_KEY")),
       language: asString(configOrEnv(summary.language, env, "SUMMARY_LANGUAGE"), "English"),
       maxTokens: asNumber(configOrEnv(summary.maxTokens, env, "SUMMARY_MAX_TOKENS"), 1024)
     },

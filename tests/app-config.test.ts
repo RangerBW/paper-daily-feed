@@ -205,7 +205,9 @@ describe("loadAppConfig", () => {
         SUMMARY_ENABLED: "true",
         SUMMARY_LANGUAGE: "Chinese",
         SUMMARY_MODEL: "gpt-5.4",
-        SUMMARY_MAX_TOKENS: "2048"
+        SUMMARY_MAX_TOKENS: "2048",
+        OPENAI_BASE_URL: "https://summary.example.test/v1",
+        OPENAI_API_KEY: "workflow-summary-key"
       },
       json({
         matching: { paperLimit: 10 },
@@ -214,7 +216,9 @@ describe("loadAppConfig", () => {
           enabled: false,
           language: "English",
           model: "old-model",
-          maxTokens: 256
+          maxTokens: 256,
+          baseUrl: "",
+          apiKey: ""
         }
       })
     );
@@ -225,6 +229,8 @@ describe("loadAppConfig", () => {
     expect(config.summary.language).toBe("Chinese");
     expect(config.summary.model).toBe("gpt-5.4");
     expect(config.summary.maxTokens).toBe(2048);
+    expect(config.summary.baseUrl).toBe("https://summary.example.test/v1");
+    expect(config.summary.apiKey).toBe("workflow-summary-key");
   });
 
   it("loads config/app.json when no explicit text or APP_CONFIG exists", () => {
