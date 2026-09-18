@@ -34,6 +34,40 @@ function validateSummary(value: string | undefined): string {
   return summary;
 }
 
+function unquote(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+function summaryEndpoint(baseUrl: string): string {
+  const normalized = unquote(baseUrl);
+  if (!normalized) {
+    throw new Error("Missing summary base URL. Set OPENAI_BASE_URL to an absolute URL, for example https://api.openai.com/v1.");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new Error(
+      "Invalid summary base URL. Set OPENAI_BASE_URL to an absolute URL, for example https://api.openai.com/v1."
+    );
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Invalid summary base URL. OPENAI_BASE_URL must start with http:// or https://.");
+  }
+
+  const basePath = parsed.pathname.replace(/\/+$/, "");
+  return new URL("chat/completions", `${parsed.origin}${basePath}/`).toString();
+}
+
 async function requestSummary(endpoint: string, apiKey: string, body: string): Promise<string> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -76,7 +110,7 @@ export function createOpenAISummarizer(
       throw new Error("Missing summary API key.");
     }
 
-    const endpoint = `${config.baseUrl.replace(/\/$/, "")}/chat/completions`;
+    const endpoint = summaryEndpoint(config.baseUrl);
     return requestSummary(
       endpoint,
       apiKey,

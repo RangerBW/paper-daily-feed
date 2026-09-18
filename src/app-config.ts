@@ -225,6 +225,13 @@ function asString(value: unknown, defaultValue: string): string {
   return String(value);
 }
 
+function asDefaultString(value: unknown, defaultValue: string): string {
+  if (value === null || value === undefined || value === "") {
+    return defaultValue;
+  }
+  return String(value);
+}
+
 function asOptionalString(value: unknown): string | undefined {
   if (value === null || value === undefined) {
     return undefined;
@@ -366,11 +373,13 @@ function readLocalConfig(): string | undefined {
 }
 
 function envValue(env: Env, name: string, defaultValue = ""): string {
-  return env[name] ?? defaultValue;
+  const value = env[name];
+  return value === undefined || value === "" ? defaultValue : value;
 }
 
 function configOrEnv(configValue: unknown, env: Env, envName: string): unknown {
-  return env[envName] ?? configValue;
+  const value = env[envName];
+  return value === undefined || value === "" ? configValue : value;
 }
 
 function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
@@ -452,13 +461,13 @@ function normalizeAppConfig(rawConfig: UnknownRecord, env: Env): AppConfig {
     },
     summary: {
       enabled: asBoolean(configOrEnv(summary.enabled, env, "SUMMARY_ENABLED"), false),
-      baseUrl: asString(
+      baseUrl: asDefaultString(
         configOrEnv(summary.baseUrl, env, "OPENAI_BASE_URL"),
         envValue(env, "OPENAI_BASE_URL", "https://api.openai.com/v1")
       ),
-      model: asString(configOrEnv(summary.model, env, "SUMMARY_MODEL"), "gpt-4o-mini"),
-      apiKey: asString(configOrEnv(summary.apiKey, env, "OPENAI_API_KEY"), envValue(env, "OPENAI_API_KEY")),
-      language: asString(configOrEnv(summary.language, env, "SUMMARY_LANGUAGE"), "English"),
+      model: asDefaultString(configOrEnv(summary.model, env, "SUMMARY_MODEL"), "gpt-4o-mini"),
+      apiKey: asDefaultString(configOrEnv(summary.apiKey, env, "OPENAI_API_KEY"), envValue(env, "OPENAI_API_KEY")),
+      language: asDefaultString(configOrEnv(summary.language, env, "SUMMARY_LANGUAGE"), "English"),
       maxTokens: asNumber(configOrEnv(summary.maxTokens, env, "SUMMARY_MAX_TOKENS"), 1024)
     },
     dailyRomance: {

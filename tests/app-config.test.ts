@@ -233,6 +233,55 @@ describe("loadAppConfig", () => {
     expect(config.summary.apiKey).toBe("workflow-summary-key");
   });
 
+  it("ignores empty workflow environment overrides", () => {
+    const config = loadAppConfig(
+      {
+        SUMMARY_ENABLED: "",
+        SUMMARY_LANGUAGE: "",
+        SUMMARY_MODEL: "",
+        SUMMARY_MAX_TOKENS: "",
+        OPENAI_BASE_URL: "",
+        OPENAI_API_KEY: ""
+      },
+      json({
+        summary: {
+          enabled: true,
+          language: "Chinese",
+          model: "configured-model",
+          maxTokens: 2048,
+          baseUrl: "https://summary.example.test/v1",
+          apiKey: "configured-summary-key"
+        }
+      })
+    );
+
+    expect(config.summary.enabled).toBe(true);
+    expect(config.summary.language).toBe("Chinese");
+    expect(config.summary.model).toBe("configured-model");
+    expect(config.summary.maxTokens).toBe(2048);
+    expect(config.summary.baseUrl).toBe("https://summary.example.test/v1");
+    expect(config.summary.apiKey).toBe("configured-summary-key");
+  });
+
+  it("uses summary defaults when string config values are empty", () => {
+    const config = loadAppConfig(
+      {},
+      json({
+        summary: {
+          baseUrl: "",
+          model: "",
+          apiKey: "",
+          language: ""
+        }
+      })
+    );
+
+    expect(config.summary.baseUrl).toBe("https://api.openai.com/v1");
+    expect(config.summary.model).toBe("gpt-4o-mini");
+    expect(config.summary.apiKey).toBe("");
+    expect(config.summary.language).toBe("English");
+  });
+
   it("loads config/app.json when no explicit text or APP_CONFIG exists", () => {
     removeAppConfigJsoncFile();
     writeAppConfigFile({

@@ -68,6 +68,57 @@ describe("createOpenAISummarizer", () => {
     expect(String(requestInit?.body)).toContain('"max_tokens":2048');
   });
 
+  it("normalizes quoted and padded summary base URLs before calling the API", async () => {
+    const fetchMock = mock(async (_url: string, _init?: RequestInit) => {
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { content: "A concise TLDR." } }]
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    });
+    stubFetch(fetchMock);
+
+    const summarize = createOpenAISummarizer({
+      ...summaryConfig,
+      baseUrl: ' "https://example.test/v1/" '
+    });
+
+    await summarize({
+      journal: "Nature",
+      title: "Urban mobility",
+      abstract: "A paper about urban mobility.",
+      url: "https://example.test/paper",
+      publishedAt: null,
+      score: 0.9,
+      matchContext: null
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.test/v1/chat/completions",
+      expect.any(Object)
+    );
+  });
+
+  it("throws a clear error when the configured summary base URL is invalid", async () => {
+    const summarize = createOpenAISummarizer({ ...summaryConfig, baseUrl: "" });
+
+    await expect(
+      summarize({
+        journal: "Nature",
+        title: "Urban mobility",
+        abstract: "A paper about urban mobility.",
+        url: "https://example.test/paper",
+        publishedAt: null,
+        score: 0.9,
+        matchContext: null
+      })
+    ).rejects.toThrow("Missing summary base URL");
+  });
+
   it("throws a clear error when the configured summary API key is missing", async () => {
     const summarize = createOpenAISummarizer({ ...summaryConfig, apiKey: "" });
 
