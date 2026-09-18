@@ -59,7 +59,8 @@ describe("createOpenAISummarizer", () => {
     );
     const requestInit = fetchMock.mock.calls[0]?.[1];
     expect(String(requestInit?.body)).toContain("You write accurate academic paper summaries");
-    expect(String(requestInit?.body)).toContain("specific technical terms in the title");
+    expect(String(requestInit?.body)).toContain("Use only claims supported");
+    expect(String(requestInit?.body)).toContain("do not infer methods, results, contributions");
     expect(String(requestInit?.body)).toContain("Chinese");
     expect(String(requestInit?.body)).toContain("Journal: Nature");
     expect(String(requestInit?.body)).toContain("URL: https://example.test/paper");
@@ -104,7 +105,7 @@ describe("createOpenAISummarizer", () => {
     expect(summarized[0]!.tldr).toBe("A concise TLDR.");
   });
 
-  it("uses a title-specific Chinese fallback when summary generation fails and no abstract is available", async () => {
+  it("leaves TLDR empty when summary generation fails and no abstract is available", async () => {
     const papers: RecommendedPaper[] = [
       {
         journal: "Nature",
@@ -123,8 +124,44 @@ describe("createOpenAISummarizer", () => {
 
     const first = summarized[0];
     expect(first).toBeDefined();
-    expect(first?.tldr).toContain("遥感变化字幕生成");
-    expect(first?.tldr).toContain("大语言模型");
-    expect(first?.tldr).toContain("视觉模型");
+    expect(first?.tldr).toBe("");
+  });
+
+  it("rejects title-based generated summaries instead of sending them as TLDR", async () => {
+    const fetchMock = mock(async (_url: string, _init?: RequestInit) => {
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  "该论文题为《Urban analytics》，核心关注点是题名中所指的研究对象。由于当前数据源未提供摘要，以下为基于标题的保守概括。"
+              }
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    });
+    stubFetch(fetchMock);
+
+    const summarize = createOpenAISummarizer(summaryConfig);
+
+    await expect(
+      summarize({
+        journal: "Cities",
+        title: "Urban analytics: Definitions, disciplines, diversity and data",
+        abstract: "",
+        url: "https://example.test/paper",
+        publishedAt: null,
+        score: 0.9,
+        matchContext: null
+      })
+    ).rejects.toThrow("unsupported title-based summary");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
