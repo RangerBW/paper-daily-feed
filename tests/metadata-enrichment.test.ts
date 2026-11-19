@@ -142,7 +142,7 @@ describe("metadata enrichment", () => {
         })
       ],
       { enabled: true, crossref: { enabled: true, mailto: "" } },
-      { fetchCrossref, fetchArxivByTitle, fetchOpenAlexByTitle }
+      { fetchCrossref, searchCrossref: async () => [], fetchArxivByTitle, fetchOpenAlexByTitle }
     );
 
     expect(fetchCrossref).not.toHaveBeenCalled();
@@ -154,5 +154,30 @@ describe("metadata enrichment", () => {
     );
     expect(enriched[0]?.abstract).toContain("hierarchical activity spaces");
     expect(enriched[0]?.doi).toBe("10.48550/arXiv.2603.21507");
+  });
+
+  it("resolves RSS items without DOIs by matching the title and journal before looking up the abstract by DOI", async () => {
+    const title = "A dataset for post-disaster building mapping";
+    const journal = "ISPRS Journal of Photogrammetry and Remote Sensing";
+    const doi = "10.1016/j.isprsjprs.2026.11.005";
+    const url = "https://www.sciencedirect.com/science/article/pii/S0924271626005617";
+    const abstract = "The study evaluates building damage mapping across several disaster regions.";
+    const searchCrossref = mock(async () => [
+      { title, journal: "Another venue", doi: "10.1234/wrong", abstract: "This abstract belongs to another paper with the same title." },
+      { title, journal, doi }
+    ]);
+    const fetchOpenAlexByDoi = mock(async () => ({ id: "W123", doi, abstract }));
+    const fetchArxivByTitle = mock(async () => []);
+
+    const [enriched] = await enrichRecommendationPaperMetadata(
+      [recommendation({ title, journal: "ISPRS P&RS", url, abstract: "" })],
+      { enabled: true, crossref: { enabled: true, mailto: "" } },
+      { searchCrossref, fetchOpenAlexByDoi, fetchArxivByTitle }
+    );
+
+    expect(searchCrossref).toHaveBeenCalledWith(title, journal);
+    expect(fetchOpenAlexByDoi).toHaveBeenCalledWith(doi);
+    expect(fetchArxivByTitle).not.toHaveBeenCalled();
+    expect(enriched).toMatchObject({ doi, abstract, url, journal: "ISPRS P&RS", score: 0.8 });
   });
 });

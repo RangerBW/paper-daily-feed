@@ -11,6 +11,8 @@ export type OpenAlexMetadata = {
 
 type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 const DEFAULT_TIMEOUT_MS = 8_000;
+const WORK_FIELDS = "id,title,display_name,doi,abstract_inverted_index,authorships,publication_date,primary_location";
+type OpenAlexOptions = { fetcher?: Fetcher; timeoutMs?: number };
 
 async function fetchWithTimeout(
   fetcher: Fetcher,
@@ -84,11 +86,12 @@ function normalizeWork(work: OpenAlexWork): OpenAlexMetadata | null {
     .filter((author): author is string => Boolean(author));
   const publishedAt = work.publication_date ? new Date(work.publication_date) : null;
   const doi = work.doi?.replace(/^https:\/\/doi\.org\//i, "");
+  const abstract = reconstructAbstract(work.abstract_inverted_index);
 
   return {
     id: work.id,
     ...(title ? { title } : {}),
-    ...(reconstructAbstract(work.abstract_inverted_index) ? { abstract: reconstructAbstract(work.abstract_inverted_index) } : {}),
+    ...(abstract ? { abstract } : {}),
     ...(authors?.length ? { authors } : {}),
     publishedAt: publishedAt && !Number.isNaN(publishedAt.getTime()) ? publishedAt : null,
     ...(work.primary_location?.landing_page_url ? { url: work.primary_location.landing_page_url } : {}),
@@ -97,21 +100,10 @@ function normalizeWork(work: OpenAlexWork): OpenAlexMetadata | null {
   };
 }
 
-export async function fetchOpenAlexMetadataByTitle(
-  title: string,
-  options: { fetcher?: Fetcher; timeoutMs?: number } = {}
-): Promise<OpenAlexMetadata[]> {
-  const normalizedTitle = title.replace(/\s+/g, " ").trim();
-  if (!normalizedTitle) return [];
-
-  const fetcher = options.fetcher ?? fetch;
-  const url = new URL("https://api.openalex.org/works");
-  url.searchParams.set("search", normalizedTitle);
-  url.searchParams.set("per-page", "5");
-  url.searchParams.set("select", "id,title,display_name,doi,abstract_inverted_index,authorships,publication_date,primary_location");
-
+async function requestOpenAlex<T>(url: URL, options: OpenAlexOptions): Promise<T | null> {
+  url.searchParams.set("select", WORK_FIELDS);
   const response = await fetchWithTimeout(
-    fetcher,
+    options.fetcher ?? fetch,
     url,
     {
       headers: {
@@ -121,10 +113,33 @@ export async function fetchOpenAlexMetadataByTitle(
     },
     options.timeoutMs ?? DEFAULT_TIMEOUT_MS
   );
+  if (response.status === 404) return null;
   if (!response.ok) {
     throw new Error(`Status code ${response.status}`);
   }
+  return (await response.json()) as T;
+}
 
-  const payload = (await response.json()) as OpenAlexWorksResponse;
-  return (payload.results ?? []).map(normalizeWork).filter((work): work is OpenAlexMetadata => work !== null);
+export async function fetchOpenAlexMetadataByDoi(
+  doi: string,
+  options: OpenAlexOptions = {}
+): Promise<OpenAlexMetadata | null> {
+  const url = new URL(`https://api.openalex.org/works/doi:${encodeURIComponent(doi)}`);
+  const work = await requestOpenAlex<OpenAlexWork>(url, options);
+  return work ? normalizeWork(work) : null;
+}
+
+export async function fetchOpenAlexMetadataByTitle(
+  title: string,
+  options: OpenAlexOptions = {}
+): Promise<OpenAlexMetadata[]> {
+  const normalizedTitle = title.replace(/\s+/g, " ").trim();
+  if (!normalizedTitle) return [];
+
+  const url = new URL("https://api.openalex.org/works");
+  url.searchParams.set("search", normalizedTitle);
+  url.searchParams.set("per-page", "5");
+
+  const payload = await requestOpenAlex<OpenAlexWorksResponse>(url, options);
+  return (payload?.results ?? []).map(normalizeWork).filter((work): work is OpenAlexMetadata => work !== null);
 }

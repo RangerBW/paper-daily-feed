@@ -1,7 +1,22 @@
 import { describe, expect, it, mock } from "bun:test";
-import { fetchOpenAlexMetadataByTitle } from "../src/openalex.js";
+import { fetchOpenAlexMetadataByDoi, fetchOpenAlexMetadataByTitle } from "../src/openalex.js";
 
 describe("OpenAlex metadata", () => {
+  it("reads the specific DOI record and reconstructs its abstract", async () => {
+    const doi = "10.1016/j.isprsjprs.2026.11.005";
+    const fetcher = mock(async (_url) => Response.json({
+      id: "https://openalex.org/W123",
+      doi: `https://doi.org/${doi}`,
+      abstract_inverted_index: { Mapping: [0], damaged: [1], buildings: [2], ".": [3] }
+    }));
+
+    expect(await fetchOpenAlexMetadataByDoi(doi, { fetcher })).toMatchObject({
+      doi,
+      abstract: "Mapping damaged buildings."
+    });
+    expect(new URL(fetcher.mock.calls[0]![0]).pathname).toBe("/works/doi:10.1016%2Fj.isprsjprs.2026.11.005");
+  });
+
   it("searches works by title and reconstructs abstracts", async () => {
     const fetcher = mock(async () => {
       return new Response(

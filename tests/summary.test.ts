@@ -157,7 +157,7 @@ describe("createOpenAISummarizer", () => {
     expect(summarized[0]!.tldr).toBe("A concise TLDR.");
   });
 
-  it("leaves TLDR empty when summary generation fails and no abstract is available", async () => {
+  it("skips generation entirely when no usable abstract is available", async () => {
     const papers: RecommendedPaper[] = [
       {
         journal: "Nature",
@@ -170,25 +170,27 @@ describe("createOpenAISummarizer", () => {
       }
     ];
 
-    const summarized = await summarizeRecommendedPapers(papers, async () => {
-      throw new Error("unavailable");
-    });
+    const summarize = mock(async () => "A title-only guess.");
+    const summarized = await summarizeRecommendedPapers(papers, summarize);
 
     const first = summarized[0];
     expect(first).toBeDefined();
     expect(first?.tldr).toBe("");
+    expect(summarize).not.toHaveBeenCalled();
   });
 
-  it("rejects title-based generated summaries instead of sending them as TLDR", async () => {
+  it.each([
+    "该论文题为《Urban analytics》，核心关注点是题名中所指的研究对象。由于当前数据源未提供摘要，以下为基于标题的保守概括。",
+    "未提供摘要正文或可核实的论文内容，因此无法生成可靠的中文论文摘要。",
+    "目前无法生成可靠的论文摘要：所提供信息仅包含题名、期刊名称及链接。",
+    "NO_SUMMARY_AVAILABLE"
+  ])("rejects unsupported generated text %s", async (content) => {
     const fetchMock = mock(async (_url: string, _init?: RequestInit) => {
       return new Response(
         JSON.stringify({
           choices: [
             {
-              message: {
-                content:
-                  "该论文题为《Urban analytics》，核心关注点是题名中所指的研究对象。由于当前数据源未提供摘要，以下为基于标题的保守概括。"
-              }
+              message: { content }
             }
           ]
         }),
@@ -206,7 +208,7 @@ describe("createOpenAISummarizer", () => {
       summarize({
         journal: "Cities",
         title: "Urban analytics: Definitions, disciplines, diversity and data",
-        abstract: "",
+        abstract: "The study compares three urban analytics frameworks and reports their applications.",
         url: "https://example.test/paper",
         publishedAt: null,
         score: 0.9,
