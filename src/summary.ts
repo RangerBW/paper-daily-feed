@@ -1,26 +1,30 @@
 import type { SummaryConfig } from "./app-config.js";
+import { hasMeaningfulAbstract } from "./text.js";
 import type { RecommendedPaper } from "./types.js";
 
 export type SummarizePaper = (paper: RecommendedPaper) => Promise<string>;
 
-function fallbackSummary(paper: RecommendedPaper): string {
-  return paper.abstract.trim();
-}
+const NO_SUMMARY = "NO_SUMMARY_AVAILABLE";
+const UNSUPPORTED_SUMMARY_MARKERS = [
+  "核心关注点是题名中所指的研究对象",
+  "大概率围绕",
+  "基于标题的保守概括",
+  "由于当前数据源未提供摘要",
+  "未提供摘要正文",
+  "请提供论文摘要",
+  "建议打开原文进一步确认",
+  "may focus on key problems",
+  "based on the title",
+  "reliable summary cannot be generated"
+];
 
 function looksLikeUnsupportedSummary(value: string): boolean {
   const normalized = value.replace(/\s+/g, " ").trim().toLowerCase();
-  return [
-    "核心关注点是题名中所指的研究对象",
-    "大概率围绕",
-    "基于标题的保守概括",
-    "由于当前数据源未提供摘要",
-    "建议打开原文进一步确认",
-    "无法生成可靠摘要",
-    "不能生成可靠摘要",
-    "may focus on key problems",
-    "based on the title",
-    "reliable summary cannot be generated"
-  ].some((marker) => normalized.includes(marker.toLowerCase()));
+  return (
+    normalized.includes(NO_SUMMARY.toLowerCase()) ||
+    /(?:无法|不能|不足以)\s*(?:生成|提供|撰写|支持)[^，。；]{0,20}摘要/u.test(normalized) ||
+    UNSUPPORTED_SUMMARY_MARKERS.some((marker) => normalized.includes(marker))
+  );
 }
 
 function validateSummary(value: string | undefined): string {
@@ -105,6 +109,8 @@ export function createOpenAISummarizer(
   _env: Record<string, string | undefined> = process.env
 ): SummarizePaper {
   return async (paper: RecommendedPaper) => {
+    if (!hasMeaningfulAbstract(paper.abstract)) return "";
+
     const apiKey = config.apiKey.trim();
     if (!apiKey) {
       throw new Error("Missing summary API key.");
@@ -122,8 +128,8 @@ export function createOpenAISummarizer(
             content: [
               "You write accurate academic paper summaries for a researcher screening new papers.",
               `Follow these output requirements exactly: ${config.language}`,
-              "Use only claims supported by the supplied abstract or reliable source metadata.",
-              "If no abstract or reliable source content is supplied, say that a reliable summary cannot be generated; do not infer methods, results, contributions, or conclusions from the title alone.",
+              "Use only claims supported by the supplied abstract. Use the title, journal, and DOI only to identify the article.",
+              `If the supplied abstract contains only bibliographic information or does not support a summary, reply with exactly ${NO_SUMMARY}. Never write an explanation or request more information. In all cases, do not infer methods, results, contributions, or conclusions from the title alone.`,
               "When the requested language is Chinese, write one concise paragraph of about 180-240 Chinese characters covering the background, method, key results, and contribution, but include only details supported by the supplied source.",
               "Do not write generic placeholders such as 'related field', 'core concepts', 'may focus on key problems', or 'method system/application scenario'."
             ].join(" ")
@@ -135,18 +141,7 @@ export function createOpenAISummarizer(
               `Journal: ${paper.journal}`,
               paper.doi ? `DOI: ${paper.doi}` : "",
               `URL: ${paper.url}`,
-              paper.matchContext
-                ? `Why it matched my interests: ${[
-                    paper.matchContext.bestMatchTitle,
-                    ...paper.matchContext.bestMatchTopics
-                  ]
-                    .filter(Boolean)
-                    .join("; ")}`
-                : "",
-              `Abstract: ${
-                paper.abstract ||
-                "No abstract provided. Do not infer the paper's methods, results, contributions, or conclusions from the title alone."
-              }`
+              `Abstract: ${paper.abstract}`
             ]
               .filter(Boolean)
               .join("\n")
@@ -166,16 +161,19 @@ export async function summarizeRecommendedPapers(
   const summarized: RecommendedPaper[] = [];
 
   for (const paper of papers) {
-    let tldr: string;
-    try {
-      tldr = await summarizePaper(paper);
-    } catch (error) {
-      console.log(
-        `[summary] generation failed for "${paper.title}"; using fallback summary: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-      tldr = fallbackSummary(paper);
+    let tldr = "";
+    if (hasMeaningfulAbstract(paper.abstract)) {
+      try {
+        tldr = await summarizePaper(paper);
+      } catch (error) {
+        console.log(
+          `[summary] generation failed for "${paper.title}"; showing the original abstract excerpt: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    } else {
+      console.log(`[summary] skipped "${paper.title}"; no usable abstract.`);
     }
     summarized.push({
       ...paper,

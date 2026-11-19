@@ -59,7 +59,7 @@ export async function summarizeRecommendations(
   if (config.enabled && config.apiKey.trim() && recommendations.length > 0) {
     console.log(`Generating TLDR summaries for ${recommendations.length} papers...`);
     const summarized = await summarizeRecommendedPapers(recommendations, createOpenAISummarizer(config, env));
-    console.log("Generated TLDR summaries.");
+    console.log(`Generated TLDR summaries for ${summarized.filter((paper) => paper.tldr).length}/${summarized.length} papers.`);
     return summarized;
   }
 

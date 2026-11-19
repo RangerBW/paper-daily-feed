@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import packageMetadata from "../package.json";
 import type { DeliveryConfig } from "./app-config.js";
 import type { DailyRomance } from "./daily-romance.js";
+import { hasMeaningfulAbstract } from "./text.js";
 import type { RecommendedPaper } from "./types.js";
 
 const ABSTRACT_EXCERPT_LIMIT = 280;
@@ -45,7 +46,7 @@ function renderSummary(paper: RenderablePaper): string {
     )}</p>`;
   }
 
-  if (paper.abstract.trim()) {
+  if (hasMeaningfulAbstract(paper.abstract)) {
     return `<p style="margin: 16px 0 0 0; color: #424245; font-size: 14px; line-height: 1.6;"><strong style="color: #1d1d1f;">Abstract excerpt:</strong> ${escapeHtml(
       truncateText(paper.abstract, ABSTRACT_EXCERPT_LIMIT)
     )}</p>`;

@@ -42,3 +42,9 @@ export function stripHtml(text: string): string {
     .trim();
 }
 
+export function hasMeaningfulAbstract(value: string | undefined): value is string {
+  const text = value?.trim() ?? "";
+  return !/^(?:no abstract|abstract (?:is )?(?:unavailable|not available)|未提供摘要|暂无摘要)/i.test(text)
+    && (text.match(/[\p{L}\p{N}]/gu)?.length ?? 0) >= 20;
+}
+
