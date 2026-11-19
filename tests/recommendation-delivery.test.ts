@@ -51,7 +51,9 @@ describe("Recommendation Delivery", () => {
     });
 
     expect(result.sent).toBe(false);
+    expect(result.html).toContain("Abstract excerpt:");
     expect(result.html).toContain("Original abstract retained when summary generation fails.");
+    expect(result.html).not.toContain("TLDR:");
   });
 
   it("fetches a random quotation when daily romance is enabled", async () => {
