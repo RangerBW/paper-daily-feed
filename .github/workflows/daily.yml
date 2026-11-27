@@ -3,7 +3,7 @@ name: Daily paper feeds
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 23 * * *"
+    - cron: "30 0 * * *" # 08:30 Asia/Shanghai
 
 permissions:
   contents: write
