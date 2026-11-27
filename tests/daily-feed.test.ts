@@ -132,7 +132,7 @@ function paper(title: string): FeedPaper {
   return {
     journal: "Nature",
     title,
-    abstract: "Abstract",
+    abstract: "A usable abstract for the recommendation.",
     url: `https://example.test/${title}`,
     publishedAt: new Date("2026-05-11T00:00:00Z")
   };
@@ -156,7 +156,9 @@ const interest: InterestDocument = {
 describe("runDailyFeed delivery history", () => {
   beforeEach(() => {
     mock.clearAllMocks();
-    historySessionMock.filterUndeliveredPapers.mockImplementation((papers: FeedPaper[]) => papers.slice(1));
+    historySessionMock.filterUndeliveredPapers.mockImplementation((papers: FeedPaper[]) =>
+      papers.filter((paper) => paper.title !== "Delivered")
+    );
     corpusMock.buildInterestCorpus.mockResolvedValue([interest]);
     feedMock.fetchRecentFeedPapers.mockResolvedValue([paper("Delivered"), paper("Fresh")]);
     metadataEnrichmentMock.enrichFeedPaperMetadata.mockImplementation(async (papers) =>
@@ -181,8 +183,8 @@ describe("runDailyFeed delivery history", () => {
       config().metadataEnrichment
     );
     expect(matchingMock.rankPapers).toHaveBeenCalledWith(
-      config().matching,
-      [{ ...paper("Fresh"), abstract: "Enriched Abstract" }],
+      { ...config().matching, paperLimit: 30 },
+      [{ ...paper("Fresh"), abstract: `Enriched ${paper("Fresh").abstract}` }],
       [interest],
       {}
     );
@@ -210,8 +212,27 @@ describe("runDailyFeed delivery history", () => {
     await runDailyFeed("preview-email", {}, config(), dependencies);
     await runDailyFeed("run", {}, config({ runtime: { debug: true, sendEmpty: false } }), dependencies);
 
-    expect(historySessionMock.filterUndeliveredPapers).toHaveBeenCalledTimes(2);
+    expect(historySessionMock.filterUndeliveredPapers).toHaveBeenCalledTimes(4);
     expect(historySessionMock.confirmSuccessfulDelivery).not.toHaveBeenCalled();
+  });
+
+  it("checks history after enrichment and fills slots from candidates with verified abstracts", async () => {
+    const missing = recommended("Missing");
+    const previouslyDelivered = recommended("Original title");
+    const replacement = recommended("Replacement");
+    matchingMock.rankPapers.mockResolvedValue([missing, previouslyDelivered, replacement]);
+    metadataEnrichmentMock.enrichRecommendationPaperMetadata.mockImplementation(async (papers: RecommendedPaper[]) =>
+      papers.map((paper) => {
+        if (paper.title === missing.title) return { ...paper, abstract: "No abstract provided." };
+        if (paper.title === previouslyDelivered.title) return { ...paper, title: "Delivered" };
+        return paper;
+      })
+    );
+    const result = await runDailyFeed("run", {}, config({ matching: { ...config().matching, paperLimit: 1 } }), dependencies);
+
+    expect(result.recommendationCount).toBe(1);
+    expect(result.html).not.toContain("No abstract provided.");
+    expect(historySessionMock.confirmSuccessfulDelivery).toHaveBeenCalledWith([replacement], expect.any(Date));
   });
 
   it("does not save history when delivery fails", async () => {

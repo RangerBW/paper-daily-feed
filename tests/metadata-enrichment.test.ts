@@ -48,6 +48,7 @@ describe("metadata enrichment", () => {
         abstract: "Crossref abstract with enough detail to replace the RSS description.",
         url: "https://www.tandfonline.com/doi/full/10.1080/24694452.2025.2592754?af=R",
         doi: "10.1080/24694452.2025.2592754",
+        sourceIdentity: { title: paper().title, url: paper().url },
         publishedAt: new Date("2026-04-21T00:00:00.000Z"),
         authors: ["Ada Lovelace"]
       }

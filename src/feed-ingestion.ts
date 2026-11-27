@@ -53,7 +53,7 @@ function configuredFeedSources(catalog: Journal[], config: AppConfig["feeds"]): 
 
 function recentFeedPapers(papers: FeedPaper[], maxAgeDays: number, now: Date): FeedPaper[] {
   const oldest = now.getTime() - maxAgeDays * 24 * 60 * 60 * 1000;
-  return papers.filter((paper) => paper.publishedAt === null || paper.publishedAt.getTime() >= oldest);
+  return papers.filter((paper) => ((paper.availableAt ?? paper.publishedAt)?.getTime() ?? Infinity) >= oldest);
 }
 
 export async function ingestFeedPapers(

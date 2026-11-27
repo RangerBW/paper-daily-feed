@@ -2,7 +2,7 @@ import Parser from "rss-parser";
 import { createProgress } from "./progress.js";
 import { fetchCrossrefJournalWorks, type CrossrefMetadata } from "./crossref.js";
 import type { FeedPaper, FeedSource } from "./types.js";
-import { stripHtml } from "./text.js";
+import { hasMeaningfulAbstract, stripHtml } from "./text.js";
 
 type ParserItem = {
   title?: string;
@@ -11,6 +11,8 @@ type ParserItem = {
   content?: string;
   contentSnippet?: string;
   summary?: string;
+  dcDescription?: string;
+  encodedContent?: string;
   isoDate?: string;
   pubDate?: string;
   date?: string;
@@ -32,6 +34,8 @@ const parser = new Parser<object, ParserItem>({
       ["author", "authors", { keepArray: true }],
       ["dc:creator", "dcCreators", { keepArray: true }],
       ["dc:date", "dcDate"],
+      ["dc:description", "dcDescription"],
+      ["content:encoded", "encodedContent"],
       ["prism:publicationDate", "prismPublicationDate"],
       ["prism:coverDate", "prismCoverDate"],
       ["affiliation", "affiliations", { keepArray: true }],
@@ -225,20 +229,17 @@ function isBibliographicMetadataOnly(text: string): boolean {
 }
 
 function normalizeAbstract(item: ParserItem): string {
-  const text = itemText(item);
-  if (!text) {
-    return "";
-  }
-
-  const labeledAbstract = text.match(
+  const descriptions = [item.summary, item.dcDescription, item.content, item.contentSnippet]
+    .filter((value): value is string => Boolean(value)).map(normalizeField);
+  const labeledAbstracts = [...descriptions, normalizeField(item.encodedContent ?? "")].map((text) => text.match(
     /(?:^|\s)(?:Abstract|Summary|Description):\s*(.+?)(?=\s*(?:Publication date:|Source:|Author\(s\):|$))/i
-  )?.[1];
-  if (labeledAbstract) {
-    return removeLabeledFeedMetadata(labeledAbstract);
+  )?.[1]);
+  for (const text of [...labeledAbstracts, ...descriptions]) {
+    if (!text) continue;
+    const abstract = removeLabeledFeedMetadata(text);
+    if (hasMeaningfulAbstract(abstract) && !isBibliographicMetadataOnly(abstract)) return abstract;
   }
-
-  const abstract = removeLabeledFeedMetadata(text);
-  return isBibliographicMetadataOnly(abstract) ? "" : abstract;
+  return "";
 }
 
 function isScienceDirectItem(item: ParserItem, publisher?: FeedPublisher): boolean {
@@ -776,6 +777,7 @@ export async function fetchFeedSources(
               url: work.url ?? `https://doi.org/${work.doi}`,
               doi: work.doi,
               publishedAt: work.publishedAt ?? null,
+              ...(work.availableAt ? { availableAt: work.availableAt } : {}),
               ...(work.authors?.length ? { authors: work.authors } : {})
             }));
           if (fallbackPapers.length > 0) {

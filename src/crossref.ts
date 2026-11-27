@@ -10,6 +10,7 @@ export type CrossrefMetadata = {
   authors?: string[];
   journal?: string;
   publishedAt?: Date;
+  availableAt?: Date;
   url?: string;
 };
 
@@ -33,6 +34,7 @@ type CrossrefWorkMessage = {
   "published-online"?: CrossrefDate;
   published?: CrossrefDate;
   issued?: CrossrefDate;
+  created?: CrossrefDate;
   URL?: string;
 };
 
@@ -90,11 +92,14 @@ function normalizeWork(message: CrossrefWorkMessage): CrossrefMetadata | null {
   }
 
   const authors = message.author?.map(normalizeAuthor).filter((author): author is string => Boolean(author));
+  const online = parseCrossrefDate(message["published-online"]);
   const publishedAt =
-    parseCrossrefDate(message["published-print"]) ??
-    parseCrossrefDate(message["published-online"]) ??
+    online ??
     parseCrossrefDate(message.published) ??
+    parseCrossrefDate(message["published-print"]) ??
     parseCrossrefDate(message.issued);
+  const registeredAt = parseCrossrefDate(message.created);
+  const availableAt = online ?? (registeredAt && (!publishedAt || registeredAt < publishedAt) ? registeredAt : undefined);
   const abstract = message.abstract ? stripHtml(message.abstract).replace(/\s+([.,;:!?])/g, "$1") : undefined;
 
   return {
@@ -104,6 +109,7 @@ function normalizeWork(message: CrossrefWorkMessage): CrossrefMetadata | null {
     ...(authors?.length ? { authors } : {}),
     ...(firstNonEmpty(message["container-title"] ?? []) ? { journal: firstNonEmpty(message["container-title"] ?? []) } : {}),
     ...(publishedAt ? { publishedAt } : {}),
+    ...(availableAt ? { availableAt } : {}),
     ...(message.URL ? { url: message.URL } : {})
   };
 }
@@ -121,7 +127,8 @@ export async function fetchCrossrefWork(
     headers: {
       Accept: "application/json",
       "User-Agent": USER_AGENT
-    }
+    },
+    signal: AbortSignal.timeout(8_000)
   });
 
   if (!response.ok) {
@@ -139,9 +146,9 @@ export async function fetchCrossrefJournalWorks(
   const fromDate = new Date();
   fromDate.setUTCDate(fromDate.getUTCDate() - 90);
   const url = new URL(`https://api.crossref.org/journals/${encodeURIComponent(issn)}/works`);
-  url.searchParams.set("filter", `from-pub-date:${fromDate.toISOString().slice(0, 10)}`);
+  url.searchParams.set("filter", `from-created-date:${fromDate.toISOString().slice(0, 10)},type:journal-article`);
   url.searchParams.set("rows", "100");
-  url.searchParams.set("sort", "published");
+  url.searchParams.set("sort", "created");
   url.searchParams.set("order", "desc");
   if (mailto.trim()) {
     url.searchParams.set("mailto", mailto.trim());
@@ -151,7 +158,8 @@ export async function fetchCrossrefJournalWorks(
     headers: {
       Accept: "application/json",
       "User-Agent": USER_AGENT
-    }
+    },
+    signal: AbortSignal.timeout(8_000)
   });
   if (!response.ok) {
     return [];

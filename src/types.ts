@@ -19,6 +19,8 @@ export type FeedPaper = {
   url: string;
   doi?: string;
   publishedAt: Date | null;
+  availableAt?: Date;
+  sourceIdentity?: { title: string; url: string };
   authors?: string[];
   firstAffiliation?: string;
   metadataText?: string;

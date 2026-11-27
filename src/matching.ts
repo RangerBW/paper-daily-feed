@@ -205,6 +205,7 @@ function bestInterestInCluster(candidateEmbedding: number[], cluster: InterestCl
 
 type ScoredPaper = RecommendedPaper & {
   clusterId: number;
+  priority: number;
 };
 
 type ClusterScore = {
@@ -214,6 +215,12 @@ type ClusterScore = {
 
 const MULTI_INTEREST_MAX_BONUS = 0.18;
 const MULTI_INTEREST_HALF_SATURATION = 1;
+const FRESHNESS_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+const MAX_FRESHNESS_BONUS = 0.12;
+
+function comparePriority(left: ScoredPaper, right: ScoredPaper): number {
+  return right.priority - left.priority || right.score - left.score;
+}
 
 function paperKey(paper: Pick<FeedPaper, "title" | "url">): string {
   return `${paper.url.trim().toLowerCase()}::${paper.title.trim().toLowerCase()}`;
@@ -252,7 +259,7 @@ function selectHybridClusterDiverse(papers: ScoredPaper[], limit: number): Recom
 
   const selected = new Set<string>();
   const output: ScoredPaper[] = [];
-  const clusterOrder = [...byCluster.values()].sort((left, right) => (right[0]?.score ?? 0) - (left[0]?.score ?? 0));
+  const clusterOrder = [...byCluster.values()].sort((left, right) => comparePriority(left[0]!, right[0]!));
 
   for (const clusterPapers of clusterOrder) {
     const paper = clusterPapers[0];
@@ -273,7 +280,7 @@ function selectHybridClusterDiverse(papers: ScoredPaper[], limit: number): Recom
     }
   }
 
-  return output.map(({ clusterId: _clusterId, ...paper }) => paper);
+  return output.map(({ clusterId: _clusterId, priority: _priority, ...paper }) => paper);
 }
 
 export async function rankPapers(
@@ -281,7 +288,8 @@ export async function rankPapers(
   candidates: FeedPaper[],
   interests: InterestDocument[],
   env: Record<string, string | undefined>,
-  embedTextsMock?: EmbedTexts
+  embedTextsMock?: EmbedTexts,
+  now = new Date()
 ): Promise<RecommendedPaper[]> {
   const uniqueCandidates = dedupeCandidates(candidates);
   if (uniqueCandidates.length === 0 || interests.length === 0) {
@@ -323,16 +331,21 @@ export async function rankPapers(
       );
       const finalScore =
         (bestPositive?.score ?? 0) - config.avoidPenaltyWeight * Math.max(0, avoidPenalty);
+      const score = clampScore(finalScore);
+      const date = candidate.availableAt ?? candidate.publishedAt;
+      const ageMs = date ? now.getTime() - date.getTime() : Infinity;
+      const freshness = ageMs >= 0 && ageMs < FRESHNESS_WINDOW_MS ? 1 - ageMs / FRESHNESS_WINDOW_MS : 0;
       const bestInterest = bestPositive ? bestInterestInCluster(candidateEmbedding, bestPositive.cluster) : undefined;
 
       return {
         ...candidate,
-        score: clampScore(finalScore),
+        score,
+        priority: score + freshness * MAX_FRESHNESS_BONUS,
         matchContext: toMatchContext(bestInterest),
         clusterId: bestPositive?.cluster.id ?? -1
       };
     })
-    .sort((left, right) => right.score - left.score)
+    .sort(comparePriority)
     .filter((paper) => paper.score >= config.minScore);
 
   return selectHybridClusterDiverse(scored, config.paperLimit);

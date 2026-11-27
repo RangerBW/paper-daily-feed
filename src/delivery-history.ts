@@ -1,4 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { findDoi } from "./crossref.js";
+import { stripHtml } from "./text.js";
 import type { FeedPaper } from "./types.js";
 
 const DELIVERY_HISTORY_PATH = ".delivery-history.json";
@@ -16,11 +18,12 @@ type DeliveryHistory = {
 };
 
 type Env = Record<string, string | undefined>;
+type PaperIdentity = Pick<FeedPaper, "title" | "url" | "doi" | "sourceIdentity">;
 
 export type DeliveryHistorySession = {
-  filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(papers: T[]): T[];
+  filterUndeliveredPapers<T extends PaperIdentity>(papers: T[]): T[];
   confirmSuccessfulDelivery(
-    papers: Pick<FeedPaper, "title" | "url">[],
+    papers: PaperIdentity[],
     deliveredAt?: Date
   ): void;
 };
@@ -76,10 +79,25 @@ function isValidEntry(value: unknown): value is DeliveryHistoryEntry {
   );
 }
 
-function createPaperFingerprint(paper: Pick<FeedPaper, "title" | "url">, env: Env = process.env): string {
-  return new Bun.CryptoHasher("sha256")
-    .update(`${historySalt(env)}::${normalizeUrl(paper.url)}::${normalizeTitle(paper.title)}`)
-    .digest("hex");
+export function paperIdentityKeys(paper: PaperIdentity): string[] {
+  const keys = new Set<string>();
+  const doi = findDoi(paper.doi ?? paper.url) ?? findDoi(paper.sourceIdentity?.url);
+  if (doi) keys.add(`doi:${doi.toLowerCase()}`);
+
+  for (const identity of [paper, paper.sourceIdentity]) {
+    if (!identity) continue;
+    // Keep the original key readable for history written before DOI and title aliases.
+    keys.add(`${normalizeUrl(identity.url)}::${normalizeTitle(identity.title)}`);
+    const title = normalizeTitle(stripHtml(identity.title).normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu, " "));
+    if (title.length >= 30) keys.add(`title:${title}`);
+  }
+  return [...keys];
+}
+
+function paperFingerprints(paper: PaperIdentity, env: Env): string[] {
+  return paperIdentityKeys(paper).map((key) =>
+    new Bun.CryptoHasher("sha256").update(`${historySalt(env)}::${key}`).digest("hex")
+  );
 }
 
 function loadDeliveryHistory(path = DELIVERY_HISTORY_PATH): DeliveryHistory {
@@ -100,18 +118,18 @@ function saveDeliveryHistory(path: string, history: DeliveryHistory): void {
   writeFileSync(path, `${JSON.stringify(history, null, 2)}\n`);
 }
 
-function filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(
+function filterUndeliveredPapers<T extends PaperIdentity>(
   papers: T[],
   history: DeliveryHistory,
   env: Env = process.env
 ): T[] {
   const delivered = new Set(history.delivered.map((entry) => entry.fingerprint));
-  return papers.filter((paper) => !delivered.has(createPaperFingerprint(paper, env)));
+  return papers.filter((paper) => !paperFingerprints(paper, env).some((fingerprint) => delivered.has(fingerprint)));
 }
 
 function recordDeliveredPapers(
   history: DeliveryHistory,
-  papers: Pick<FeedPaper, "title" | "url">[],
+  papers: PaperIdentity[],
   deliveredAt: Date,
   env: Env = process.env
 ): DeliveryHistory {
@@ -120,8 +138,8 @@ function recordDeliveredPapers(
   const seen = new Set(records.map((entry) => entry.fingerprint));
 
   for (const paper of papers) {
-    const fingerprint = createPaperFingerprint(paper, env);
-    if (!seen.has(fingerprint)) {
+    for (const fingerprint of paperFingerprints(paper, env)) {
+      if (seen.has(fingerprint)) continue;
       seen.add(fingerprint);
       records.push({ fingerprint, deliveredAt: deliveredAt.toISOString() });
     }
@@ -136,11 +154,11 @@ export function openDeliveryHistory(options: OpenDeliveryHistoryOptions = {}): D
   let history = loadDeliveryHistory(path);
 
   return {
-    filterUndeliveredPapers<T extends Pick<FeedPaper, "title" | "url">>(papers: T[]): T[] {
+    filterUndeliveredPapers<T extends PaperIdentity>(papers: T[]): T[] {
       return filterUndeliveredPapers(papers, history, env);
     },
     confirmSuccessfulDelivery(
-      papers: Pick<FeedPaper, "title" | "url">[],
+      papers: PaperIdentity[],
       deliveredAt = new Date()
     ): void {
       const updated = recordDeliveredPapers(history, papers, deliveredAt, env);

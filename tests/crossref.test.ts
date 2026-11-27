@@ -36,6 +36,22 @@ describe("Crossref metadata", () => {
     expect(findDoi("DOI: 10.1016/j.cities.2026.105952.")).toBe("10.1016/j.cities.2026.105952");
   });
 
+  it("uses online publication dates ahead of issue dates and preserves early registration as a fallback", async () => {
+    const fetcher = mock(async () => Response.json({ message: { items: [
+      { DOI: "10.1000/online", "published-online": { "date-parts": [[2026, 11, 25]] },
+        "published-print": { "date-parts": [[2027, 2]] } },
+      { DOI: "10.1000/ahead-of-issue", created: { "date-parts": [[2026, 11, 26]] },
+        "published-print": { "date-parts": [[2027, 2]] } }
+    ] } }));
+
+    const works = await fetchCrossrefJournalWorks("0968-090X", { fetcher });
+
+    expect(works).toMatchObject([
+      { publishedAt: new Date("2026-11-25"), availableAt: new Date("2026-11-25") },
+      { publishedAt: new Date("2027-02-01"), availableAt: new Date("2026-11-26") }
+    ]);
+  });
+
   it("normalizes Crossref work metadata from DOI lookup responses", async () => {
     const fetcher = mock(async () =>
       new Response(

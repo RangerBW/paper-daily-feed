@@ -73,6 +73,24 @@ describe("delivery history", () => {
     expect(history.filterUndeliveredPapers([delivered, fresh])).toEqual([fresh]);
   });
 
+  it("recognizes the feed version, corrected metadata, and a new URL with the same DOI", () => {
+    const path = tempPath();
+    const raw = paper();
+    const corrected = paper({
+      title: "Accessibility and equity on public transit",
+      url: "https://doi.org/10.1000/paper",
+      doi: "10.1000/paper",
+      sourceIdentity: { title: raw.title, url: raw.url }
+    });
+    openDeliveryHistory({ path, env: {} }).confirmSuccessfulDelivery([corrected]);
+
+    const history = openDeliveryHistory({ path, env: {} });
+    expect(history.filterUndeliveredPapers([
+      raw,
+      paper({ title: "Different metadata", url: "https://publisher.test/10.1000/PAPER" })
+    ])).toEqual([]);
+  });
+
   it("records final delivered papers once and prunes entries older than retention", () => {
     const path = tempPath();
     const old = paper({ title: "Old", url: "https://example.test/old" });

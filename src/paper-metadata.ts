@@ -63,6 +63,7 @@ function mergeCrossrefMetadata(paper: FeedPaper, metadata: CrossrefMetadata): Fe
     journal: metadata.journal ?? paper.journal,
     abstract: hasMeaningfulAbstract(metadata.abstract) ? metadata.abstract : paper.abstract,
     publishedAt: metadata.publishedAt ?? paper.publishedAt,
+    ...(metadata.availableAt ? { availableAt: metadata.availableAt } : {}),
     ...(metadata.authors?.length ? { authors: metadata.authors } : {})
   };
 }
@@ -226,6 +227,9 @@ async function enrichPapersMetadata<TPaper extends FeedPaper>(
       }
     }
 
+    if (nextPaper.title !== paper.title || nextPaper.url !== paper.url) {
+      nextPaper = { ...nextPaper, sourceIdentity: paper.sourceIdentity ?? { title: paper.title, url: paper.url } };
+    }
     enriched.push(nextPaper);
   }
   console.log(`[paper-metadata] Crossref enriched ${repaired}/${papers.length} papers`);

@@ -181,6 +181,24 @@ describe("rankPapers", () => {
     expect(ranked.map((paper) => paper.title)).toEqual(["Strong match"]);
   });
 
+  it("prefers a recently available article over an older one with a similar relevance score", async () => {
+    const now = new Date("2026-05-20T00:00:00Z");
+    const older = candidate("Older article", "Transit equity.");
+    const newer = {
+      ...candidate("New online article", "Transit accessibility."),
+      availableAt: new Date("2026-05-19T00:00:00Z"),
+      publishedAt: new Date("2026-07-01T00:00:00Z")
+    };
+    const ranked = await rankPapers(
+      { ...matchingConfig, paperLimit: 1 }, [older, newer],
+      [{ ...interest("Transport", "Transit access.", ["transport"]), kind: "summary" }],
+      {}, async () => [[1, 0], [0.97, 0.24], [1, 0]], now
+    );
+
+    expect(ranked[0]?.title).toBe(newer.title);
+    expect(ranked[0]?.score).toBeLessThan(1);
+  });
+
   it("selects across interest clusters before filling remaining slots by score", async () => {
     const ranked = await rankPapers(
       { ...matchingConfig, paperLimit: 3, minScore: 0, clusterSimilarityThreshold: 0.8 },
